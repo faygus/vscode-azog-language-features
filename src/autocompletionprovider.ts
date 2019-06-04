@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
 import { XmlSchemaPropertiesArray } from './types';
+import XmlSimpleParser from './helpers/xmlsimpleparser';
+
+const languageId: string = 'xml';
 
 /**
  * Automatically writes the closing tag when the user writes the opening tag
@@ -7,8 +10,8 @@ import { XmlSchemaPropertiesArray } from './types';
 export default class AutoCompletionProvider implements vscode.Disposable {
 
     private documentListener: vscode.Disposable;
-    // private static maxLineChars = 1024;
-    // private static maxLines = 8096;
+    private static maxLineChars = 1024;
+    private static maxLines = 8096;
     private delayCount: number = 0;
     private documentEvent: vscode.TextDocumentChangeEvent;
 
@@ -42,7 +45,7 @@ export default class AutoCompletionProvider implements vscode.Disposable {
     }
 
     private async triggerAutoCompletion(documentEvent: vscode.TextDocumentChangeEvent): Promise<void> {
-        /*const activeTextEditor = vscode.window.activeTextEditor;
+        const activeTextEditor = vscode.window.activeTextEditor;
         const document = documentEvent.document;
         const inputChange = documentEvent.contentChanges[0];
         if (document.languageId !== languageId
@@ -136,6 +139,6 @@ export default class AutoCompletionProvider implements vscode.Disposable {
                     wholeLineRange.start,
                     wholeLineRange.end),
                 resultText);
-        }, { undoStopAfter: false, undoStopBefore: false });*/
+        }, { undoStopAfter: false, undoStopBefore: false });
     }
 }

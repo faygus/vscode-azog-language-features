@@ -5,6 +5,8 @@ import XmlFormatProvider from './formatprovider';
 import XmlRangeFormatProvider from './rangeformatprovider';
 import AutoCompletionProvider from './autocompletionprovider';
 import { AzogLinter } from './linter/azog-linter';
+import { BaseHoverProvider } from './hover/hover-provider';
+import { XmlInterpreter } from './interpreter/interpreter';
 
 export declare let globalSettings: XmlCompleteSettings;
 
@@ -31,13 +33,17 @@ export function activate(context: vscode.ExtensionContext) {
 	let linterprovider = new AzogLinter(context);
 
 	let autocompletionprovider = new AutoCompletionProvider(context, schemaPropertiesArray);
+	let xmlInterpreter = new XmlInterpreter();
+	// const hoverDisposable = vscode.languages.registerHoverProvider('xml', new BaseHoverProvider());
 
 	context.subscriptions.push(
 		completionitemprovider,
 		formatprovider,
 		rangeformatprovider,
 		linterprovider,
-		autocompletionprovider
+		autocompletionprovider,
+		xmlInterpreter,
+		// hoverDisposable
 	);
 }
 

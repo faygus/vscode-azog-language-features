@@ -1,4 +1,5 @@
 import { XmlScope } from '../types';
+import * as sax from 'sax';
 
 export default class XmlSimpleParser {
 
@@ -36,7 +37,6 @@ export default class XmlSimpleParser {
 	}
 
 	public static getScopeForPosition(xmlContent: string, offset: number): Promise<XmlScope> {
-		const sax = require("sax");
 		const parser = sax.parser(true);
 
 		return new Promise<XmlScope>(
@@ -78,7 +78,7 @@ export default class XmlSimpleParser {
 					updatePosition();
 				};
 
-				parser.onopentagstart = () => {
+				parser.onopentag = () => {
 					updatePosition();
 				};
 

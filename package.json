@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "get-uri": "2.0.3",
+    "rxjs": "^6.5.2",
     "sax": "1.2.4"
   },
   "devDependencies": {
