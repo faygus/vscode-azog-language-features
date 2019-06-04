@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"module": "commonjs",
+		"target": "es2017",
+		"noImplicitAny": false,
+		"removeComments": true,
+		"noUnusedLocals": false,
+		"noImplicitThis": true,
+		"inlineSourceMap": false,
+		"declaration": true,
+		"sourceMap": true,
+		"outDir": "../dist",
+		"preserveConstEnums": true,
+		"strictNullChecks": true,
+		"noUnusedParameters": false,
+		"rootDir": "."
+	},
+	"exclude": [
+		"node_modules",
+		".vscode-test",
+		"src"
+	]
+}

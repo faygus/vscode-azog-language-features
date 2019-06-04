@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { languageId } from '../extension';
 import { XmlDiagnosticData } from '../types';
 
 export abstract class XmlLinterProvider implements vscode.Disposable {
@@ -51,7 +50,7 @@ export abstract class XmlLinterProvider implements vscode.Disposable {
 	}
 
 	private async triggerLint(textDocument: vscode.TextDocument): Promise<void> {
-		if (textDocument.languageId !== languageId) {
+		if (textDocument.languageId !== 'xml') { // TODO
 			return;
 		}
 		const diagnostics: Array<vscode.Diagnostic[]> = new Array<vscode.Diagnostic[]>();
