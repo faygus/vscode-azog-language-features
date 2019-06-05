@@ -41,16 +41,13 @@
     }
   },
   "scripts": {
-    "prepublish": "tsc -p ./src",
     "compile": "tsc -p ./src",
     "tslint": "tslint ./src/**/*.ts",
     "watch": "tsc -w -p ./src",
-    "test": "mocha -u tdd ./out/tests/; node_modules/.bin/mocha --require jsdoctest out/extension.js",
-    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "mocha --require ts-node/register tests/**/*test.ts",
     "package": "vsce package",
-    "publish": "vsce publish",
-		"release": "standard-version",
-		"build-lib": "tsc -p ./lib/tsconfig.json"
+    "release": "standard-version",
+    "build-lib": "tsc -p ./lib/tsconfig.json"
   },
   "dependencies": {
     "get-uri": "2.0.3",
@@ -58,11 +55,14 @@
     "sax": "1.2.4"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.7",
     "@types/mocha": "5.2.6",
     "@types/node": "10.12.27",
     "@types/sax": "^1.2.0",
+    "chai": "^4.2.0",
     "jsdoctest": "1.7.1",
     "standard-version": "6.0.1",
+    "ts-node": "^8.2.0",
     "tslint": "^5.16.0",
     "typescript": "^3.4.5",
     "vsce": "1.61.0",
