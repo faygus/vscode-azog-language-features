@@ -1,12 +1,11 @@
 import { expect } from "chai";
 import { xmlToJSON } from "../lib/interpreter/xml-to-json";
 
-const xml = `<LabelWF text="hey man">
-</LabelWF>`;
-
 describe('XML to json', () => {
-	it('should convert xml to JSON', async () => {
-		const data = await xmlToJSON(xml);
+	it('should convert xml1 to JSON', async () => {
+		const xml1 = `<LabelWF text="hey man">
+</LabelWF>`;
+		const data = await xmlToJSON(xml1);
 		const expected = {
 			"tag": "LabelWF",
 			"attributes": {
@@ -18,12 +17,3 @@ describe('XML to json', () => {
 	});
 });
 
-/*
-
-		const expected = {
-			type: "labelWF",
-			value: {
-				text: "hey man"
-			}
-		};
-		*/

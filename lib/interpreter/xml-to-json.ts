@@ -12,13 +12,11 @@ export function xmlToJSON(xml: string): Promise<IJsonData> {
 				parser.resume();
 			};
 
-			/*parser.ontext = (_t: any) => {
-			};*/
-
-			parser.onopentag = (tag) => {
+			parser.onopentag = (tag: sax.Tag) => { // we guess tag is sax.Tag and not
+				// sax.QualifiedTag because xmlns is never set in our use case
 				let node: IJsonData = {
 					tag: tag.name,
-					attributes: <any>tag.attributes, // TODO
+					attributes: tag.attributes,
 					children: []
 				};
 				if (loopList.length > 0) {
@@ -28,9 +26,6 @@ export function xmlToJSON(xml: string): Promise<IJsonData> {
 				}
 				loopList.push(node);
 			};
-
-			/*parser.onattribute = () => {
-			};*/
 
 			parser.onclosetag = () => {
 				loopList.pop();

@@ -1,7 +1,1 @@
-import * as vscode from 'vscode';
-
-export function foo() {
-	vscode.workspace.onDidChangeTextDocument(event => {
-		vscode.window.showInformationMessage('text changed !');
-	});
-}
+export { xmlToAzog } from "./interpreter/xml-to-azog";
