@@ -1,6 +1,8 @@
 import { XmlDiagnosticData, TextPosition, TextRange } from "../types";
 import * as sax from "sax";
 import { XmlDocumentRules } from "../types/document-rules";
+import { antiCapitalize } from "../utils/string-utils";
+import { XmlDepthPath, XmlNode } from '../utils/xml-parsing';
 
 export class XmlDiagnosticDataManager {
 	private _strict = true;
@@ -11,12 +13,15 @@ export class XmlDiagnosticDataManager {
 
 	diagnostic(xmlContent: string): Promise<XmlDiagnosticData[]> {
 		const stringSearch = new StringSearch(xmlContent);
+		console.log('diagnostic !!!');
 		return new Promise<XmlDiagnosticData[]>(
 			(resolve) => {
 				const parser = sax.parser(true);
 				let res: XmlDiagnosticData[] = [];
+				const xmlDepthPath = new XmlDepthPath();
 
 				parser.onerror = () => {
+					console.log('onerror');
 					// if (res.find(e => e.line === parser.line) === undefined) {
 					const position = new TextPosition(parser.line, parser.column);
 					const data = new XmlDiagnosticData(position, parser.error.message,
@@ -26,28 +31,12 @@ export class XmlDiagnosticDataManager {
 					parser.resume();
 				};
 
-				parser.onopentag = (tagData) => {
+				parser.onopentag = (tagData: sax.Tag) => {
+					xmlDepthPath.push(new XmlNode(tagData.name, tagData.attributes));
 					let nodeNameSplitted: Array<string> = tagData.name.split('.');
-
-					if (this._documentRules.hasElement(nodeNameSplitted[0])) {
-						let schemaTagAttributes = this._documentRules.getAllAttributes(nodeNameSplitted[0]);
-						nodeNameSplitted.shift();
-						Object.keys(tagData.attributes).concat(nodeNameSplitted).forEach((a: string) => {
-							if (schemaTagAttributes.findIndex(sta => sta.name === a) < 0 && a.indexOf(":") < 0 && a !== "xmlns") {
-								const textRange = stringSearch.search(`${a}=`,
-									{ line: parser.line, column: parser.column }, '<');
-								if (textRange) {
-									const data = new XmlDiagnosticData(textRange,
-										errorMessages.unknownAttribute(a, tagData.name),
-										this._strict ? "info" : "hint");
-									res.push(data);
-								}
-							}
-							// TODO check type of attribute
-						});
-						// TODO check nested node (<Style> can not contain <Label> for example)
-					}
-					else if (tagData.name.indexOf(":") < 0) {
+					const rootName = nodeNameSplitted[0];
+					const element = this._documentRules.getElement(antiCapitalize(rootName));
+					if (!element) {
 						const textRange = stringSearch.searchFirstWord({
 							line: parser.line, column: parser.column
 						}, '<');
@@ -57,7 +46,57 @@ export class XmlDiagnosticDataManager {
 								this._strict ? "info" : "hint");
 							res.push(data);
 						}
+					} else if (nodeNameSplitted.length > 1) {
+						const attributeName = nodeNameSplitted.slice().reverse()[0];
+						const attribute = element.getAttribute(antiCapitalize(attributeName));
+						if (!attribute) {
+							const textRange = stringSearch.search(`.${attributeName}`,
+								{ line: parser.line, column: parser.column }, '<');
+							if (textRange) {
+								const xmlDiagnosticData = new XmlDiagnosticData(textRange,
+									errorMessages.unknownAttribute(attributeName, rootName), // TODO rootName
+									this._strict ? "info" : "hint");
+								res.push(xmlDiagnosticData);
+							}
+						} else { // check sub attributes
+							const schemaTagAttributes = attribute.getAllSubAttributes();
+							Object.keys(tagData.attributes)
+								.forEach((subAttributeName: string) => {
+									if (schemaTagAttributes.findIndex(sta => sta.name === antiCapitalize(subAttributeName)) < 0) {
+										const textRange = stringSearch.search(`${subAttributeName}=`,
+											{ line: parser.line, column: parser.column }, '<');
+										if (textRange) {
+											const xmlDiagnosticData = new XmlDiagnosticData(textRange,
+												errorMessages.unknownAttribute(subAttributeName, tagData.name),
+												this._strict ? "info" : "hint");
+											res.push(xmlDiagnosticData);
+										}
+									}
+									// TODO check type of attribute
+								});
+						}
+					} else {
+						let schemaTagAttributes = this._documentRules.getAllAttributes(antiCapitalize(rootName));
+						Object.keys(tagData.attributes)
+							.forEach((attributeName: string) => {
+								if (schemaTagAttributes.findIndex(sta => sta.name === antiCapitalize(attributeName)) < 0) {
+									const textRange = stringSearch.search(`${attributeName}=`,
+										{ line: parser.line, column: parser.column }, '<');
+									if (textRange) {
+										const xmlDiagnosticData = new XmlDiagnosticData(textRange,
+											errorMessages.unknownAttribute(attributeName, tagData.name),
+											this._strict ? "info" : "hint");
+										res.push(xmlDiagnosticData);
+									}
+								}
+								// TODO check type of attribute
+							});
+						// TODO check nested node (<Style> can not contain <Label> for example)
 					}
+				};
+
+				parser.onclosetag = () => {
+					xmlDepthPath.pop();
 				};
 
 				parser.onend = () => {

@@ -18,6 +18,6 @@ export class XmlInterpreter extends EditorEventListener {
 		const xml = document.getText();
 		const azogApp = await xmlToAzog(xml);
 		if (!azogApp) return;
-		console.log('azogApp', JSON.stringify(azogApp));
+		// console.log('azogApp', JSON.stringify(azogApp));
 	}
 }

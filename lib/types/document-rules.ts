@@ -1,3 +1,5 @@
+import { SimpleType, EnumType } from "../language/types";
+
 export class XmlDocumentRules {
 	elements: XmlElement[] = [];
 
@@ -12,6 +14,10 @@ export class XmlDocumentRules {
 		}
 		return [];
 	}
+
+	getElement(name: string): XmlElement | undefined {
+		return this.elements.find(e => e.name === name);
+	}
 }
 
 export class XmlElement {
@@ -22,14 +28,32 @@ export class XmlElement {
 		this.name = name;
 		this.attributes = attributes ? attributes : [];
 	}
+
+	hasAttribute(attributeName: string): boolean {
+		return this.attributes.findIndex(a => a.name === attributeName) >= 0;
+	}
+
+	getAttribute(attributeName: string): XmlAttribute | undefined {
+		return this.attributes.find(a => a.name === attributeName);
+	}
 }
 
 export class XmlAttribute {
 	name: string;
-	type: string;
+	type: SimpleType | EnumType | XmlAttribute[];
 
-	constructor(name: string, type: string) {
+	constructor(name: string, subAttributes: XmlAttribute[]);
+	constructor(name: string, type: SimpleType);
+	constructor(name: string, type: EnumType);
+	constructor(name: string, type: SimpleType | EnumType | XmlAttribute[]) {
 		this.name = name;
 		this.type = type;
+	}
+
+	getAllSubAttributes(): XmlAttribute[] {
+		if (Array.isArray(this.type)) {
+			return <XmlAttribute[]>this.type;
+		}
+		return [];
 	}
 }

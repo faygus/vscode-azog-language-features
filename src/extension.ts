@@ -21,13 +21,13 @@ export function activate(context: vscode.ExtensionContext) {
 		getDocumentSelector(),
 		new XmlCompletionItemProvider(context, schemaPropertiesArray));
 
-	let formatprovider = vscode.languages.registerDocumentFormattingEditProvider(
+	/*let formatprovider = vscode.languages.registerDocumentFormattingEditProvider(
 		getDocumentSelector(),
-		new XmlFormatProvider(context, schemaPropertiesArray));
+		new XmlFormatProvider(context, schemaPropertiesArray));*/
 
-	let rangeformatprovider = vscode.languages.registerDocumentRangeFormattingEditProvider(
+	/*let rangeformatprovider = vscode.languages.registerDocumentRangeFormattingEditProvider(
 		getDocumentSelector(),
-		new XmlRangeFormatProvider(context, schemaPropertiesArray));
+		new XmlRangeFormatProvider(context, schemaPropertiesArray));*/
 
 	let linterprovider = new AzogLinter(context);
 
@@ -37,8 +37,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		completionitemprovider,
-		formatprovider,
-		rangeformatprovider,
+		// formatprovider,
+		// rangeformatprovider,
 		linterprovider,
 		autocompletionprovider,
 		xmlInterpreter,

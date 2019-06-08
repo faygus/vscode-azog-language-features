@@ -1,4 +1,5 @@
 import { IJsonData } from "../types/json-data";
+import { antiCapitalize } from "../utils/string-utils";
 
 export function dataToAzog(data: IJsonData): any {
 	const viewType = convertXmlTagToJsonKey(data.tag);
@@ -26,5 +27,5 @@ export function dataToAzog(data: IJsonData): any {
  * example : convert LabelWF to labelWF
  */
 function convertXmlTagToJsonKey(tag: string): string {
-	return tag.charAt(0).toLowerCase() + tag.slice(1)
+	return antiCapitalize(tag);
 }
