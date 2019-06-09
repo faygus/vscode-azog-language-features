@@ -1,6 +1,12 @@
 import { PropertyType } from "../types";
 
 export const controlWFStyle: PropertyType = {
-	color: ['WHITE', 'GRAY', 'DARK'],
-	size: ['Small', 'Medium', 'High'] // TODO
+	color: {
+		type: ['WHITE', 'GRAY', 'DARK'],
+		comment: 'color of the control'
+	},
+	size: {
+		type: ['Small', 'Medium', 'High'],
+		comment: 'size of the control'
+	} // TODO
 }

@@ -5,7 +5,6 @@ import { antiCapitalize } from "../utils/string-utils";
 import { XmlDepthPath, XmlNode } from '../utils/xml-parsing';
 
 export class XmlDiagnosticDataManager {
-	private _strict = true;
 
 	constructor(private _documentRules: XmlDocumentRules) {
 
@@ -13,7 +12,6 @@ export class XmlDiagnosticDataManager {
 
 	diagnostic(xmlContent: string): Promise<XmlDiagnosticData[]> {
 		const stringSearch = new StringSearch(xmlContent);
-		console.log('diagnostic !!!');
 		return new Promise<XmlDiagnosticData[]>(
 			(resolve) => {
 				const parser = sax.parser(true);
@@ -21,11 +19,10 @@ export class XmlDiagnosticDataManager {
 				const xmlDepthPath = new XmlDepthPath();
 
 				parser.onerror = () => {
-					console.log('onerror');
 					// if (res.find(e => e.line === parser.line) === undefined) {
 					const position = new TextPosition(parser.line, parser.column);
 					const data = new XmlDiagnosticData(position, parser.error.message,
-						this._strict ? "error" : "warning");
+						"error");
 					res.push(data);
 					// }
 					parser.resume();
@@ -42,8 +39,7 @@ export class XmlDiagnosticDataManager {
 						}, '<');
 						if (textRange) {
 							const data = new XmlDiagnosticData(textRange,
-								errorMessages.unknownTag(tagData.name),
-								this._strict ? "info" : "hint");
+								errorMessages.unknownTag(tagData.name), "info");
 							res.push(data);
 						}
 					} else if (nodeNameSplitted.length > 1) {
@@ -55,7 +51,7 @@ export class XmlDiagnosticDataManager {
 							if (textRange) {
 								const xmlDiagnosticData = new XmlDiagnosticData(textRange,
 									errorMessages.unknownAttribute(attributeName, rootName), // TODO rootName
-									this._strict ? "info" : "hint");
+									"info");
 								res.push(xmlDiagnosticData);
 							}
 						} else { // check sub attributes
@@ -68,7 +64,7 @@ export class XmlDiagnosticDataManager {
 										if (textRange) {
 											const xmlDiagnosticData = new XmlDiagnosticData(textRange,
 												errorMessages.unknownAttribute(subAttributeName, tagData.name),
-												this._strict ? "info" : "hint");
+												"info");
 											res.push(xmlDiagnosticData);
 										}
 									}
@@ -85,7 +81,7 @@ export class XmlDiagnosticDataManager {
 									if (textRange) {
 										const xmlDiagnosticData = new XmlDiagnosticData(textRange,
 											errorMessages.unknownAttribute(attributeName, tagData.name),
-											this._strict ? "info" : "hint");
+											"info");
 										res.push(xmlDiagnosticData);
 									}
 								}

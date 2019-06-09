@@ -1,8 +1,7 @@
-export class XmlDepthPath extends Array<XmlNode> {
-	getFirstParentNode(): XmlNode | undefined {
-		if (this.length === 0) return undefined;
-		return this.slice().reverse()[0];
-	}
+import { DataStack } from "./data-stack";
+
+export class XmlDepthPath extends DataStack<XmlNode> {
+
 }
 
 export class XmlNode {

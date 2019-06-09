@@ -10,6 +10,7 @@ const documentRules = new XmlDocumentRules();
 const xmlElements = Object.keys(tags).map(tagName => {
 	const tagValue = tags[tagName];
 	const xmlElement = new XmlElement(tagName);
+	xmlElement.comment = tagValue.comment;
 	const xmlAttributes = Object.keys(tagValue.attributes).map(attributeName => {
 		const attributeValue = tagValue.attributes[attributeName];
 		return parseXmlAttribute(attributeName, attributeValue);

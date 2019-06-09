@@ -36,6 +36,15 @@ export default class XmlSimpleParser {
 			});
 	}
 
+	/**
+	 * Determines the xml zone where the offset is located (element, attribute, text)
+	 * Examples :
+	 * <Fo|o bar="hello"/> -> element
+	 * <Foo| bar="hello"/> -> element
+	 * <Foo |bar="hello/>" -> attribute
+	 * <Foo bar="hell|o/>" -> attribute
+	 * <Foo>He|y</Foo> -> text
+	 */
 	public static getScopeForPosition(xmlContent: string, offset: number): Promise<XmlScope> {
 		const parser = sax.parser(true);
 
@@ -58,10 +67,10 @@ export default class XmlSimpleParser {
 						if (content.lastIndexOf(">") >= content.lastIndexOf("<")) {
 							result.context = "text";
 						} else {
-							let lastTagText = content.substring(content.lastIndexOf("<"));
+							let lastTagText = content;
 							if (!/\s/.test(lastTagText)) {
 								result.context = "element";
-							} else if ((lastTagText.split(`"`).length & 1) !== 0) {
+							} else if (lastTagText.split(`"`).length > 0) {
 								result.context = "attribute";
 							}
 						}

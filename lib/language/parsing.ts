@@ -1,4 +1,4 @@
-import { PropertyType, SimpleType, ComplexType } from "./types";
+import { PropertyType, SimpleType, ComplexType, ITagAttributeDefinition } from "./types";
 import { XmlAttribute } from "../types/document-rules";
 
 export function isSimpleType(data: PropertyType): data is SimpleType {
@@ -9,16 +9,23 @@ export function isComplexType(data: PropertyType): data is ComplexType {
 	return typeof data === 'object';
 }
 
-export function parseXmlAttribute(attributeName: string, attributeValue: PropertyType): XmlAttribute {
-	if (isSimpleType(attributeValue)) {
-		return new XmlAttribute(attributeName, attributeValue);
-	} else if (isComplexType(attributeValue)) {
-		const subAttributes = Object.keys(attributeValue).map(subAttributeName => {
-			const subAttributeValue = attributeValue[subAttributeName];
-			return parseXmlAttribute(subAttributeName, subAttributeValue);
+export function parseXmlAttribute(attributeName: string,
+	attributeValue: ITagAttributeDefinition): XmlAttribute {
+	let res: XmlAttribute;
+	const type = attributeValue.type;
+	if (isSimpleType(type)) {
+		res = new XmlAttribute(attributeName, type);
+	} else if (isComplexType(type)) {
+		const subAttributes = Object.keys(type).map(subAttributeName => {
+			const subAttributeValue = type[subAttributeName];
+			const subAttribute = parseXmlAttribute(subAttributeName, subAttributeValue);
+			subAttribute.comment = subAttributeValue.comment;
+			return subAttribute;
 		});
-		return new XmlAttribute(attributeName, subAttributes);
+		res = new XmlAttribute(attributeName, subAttributes);
 	} else { // enum
-		return new XmlAttribute(attributeName, attributeValue);
+		res = new XmlAttribute(attributeName, type);
 	}
+	res.comment = attributeValue.comment;
+	return res;
 }

@@ -22,6 +22,7 @@ export class XmlDocumentRules {
 
 export class XmlElement {
 	name: string;
+	comment?: string;
 	attributes: XmlAttribute[];
 
 	constructor(name: string, attributes?: XmlAttribute[]) {
@@ -41,6 +42,7 @@ export class XmlElement {
 export class XmlAttribute {
 	name: string;
 	type: SimpleType | EnumType | XmlAttribute[];
+	comment?: string;
 
 	constructor(name: string, subAttributes: XmlAttribute[]);
 	constructor(name: string, type: SimpleType);
