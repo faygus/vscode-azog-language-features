@@ -43,13 +43,27 @@ export default class XmlCompletionItemProvider implements vscode.CompletionItemP
 			resultTexts = element.attributes.map(attribute => {
 				return new CompletionString(attribute.name, attribute.comment);
 			});
+			return resultTexts.map(e => {
+				const res = getCompletionItem(e, scope.context);
+				res.insertText = `${e.name}=""`;
+				// TODO move the cursor
+				/*const editor = vscode.window.activeTextEditor;
+				if (editor) {
+					editor.selections = [new vscode.Selection(position, position)];
+				}*/
+				return res;
+			});
 		}
 		return resultTexts
 			.map(t => {
-				let completionItem = new vscode.CompletionItem(t.name, vscode.CompletionItemKind.Snippet);
-				completionItem.detail = scope.context;
-				completionItem.documentation = t.comment;
-				return completionItem;
+				return getCompletionItem(t, scope.context);
 			});
 	}
+}
+
+function getCompletionItem(data: CompletionString, detail: string | undefined): vscode.CompletionItem {
+	let completionItem = new vscode.CompletionItem(data.name, vscode.CompletionItemKind.Snippet);
+	completionItem.detail = detail,
+		completionItem.documentation = data.comment;
+	return completionItem;
 }

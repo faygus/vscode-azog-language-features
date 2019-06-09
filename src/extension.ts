@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import AutoCompletionProvider from '../lib/autocompletionprovider';
+import AutoCompletionProvider from '../lib/auto-completion-provider';
 import XmlCompletionItemProvider from '../lib/completion-item-provider';
 import XmlFormatProvider from '../lib/formatprovider';
 import { XmlInterpreter } from '../lib/interpreter/interpreter';
@@ -15,8 +15,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.workspace.onDidChangeConfiguration(loadConfiguration, undefined, context.subscriptions);
 	loadConfiguration();
-
-	const schemaPropertiesArray = new XmlSchemaPropertiesArray();
 	let completionitemprovider = vscode.languages.registerCompletionItemProvider(
 		getDocumentSelector(),
 		new XmlCompletionItemProvider(context));
@@ -31,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let linterprovider = new AzogLinter(context);
 
-	let autocompletionprovider = new AutoCompletionProvider(context, schemaPropertiesArray);
+	let autocompletionprovider = new AutoCompletionProvider();
 	let xmlInterpreter = new XmlInterpreter();
 	// const hoverDisposable = vscode.languages.registerHoverProvider('xml', new BaseHoverProvider());
 
