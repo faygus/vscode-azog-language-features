@@ -1,20 +1,7 @@
-export class DataStack<T> {
-
-	private _array: Array<T> = [];
-
-	constructor() {
-	}
+export class DataStack<T> extends Array<T> {
 
 	getFirstParentNode(): T | undefined {
-		if (this._array.length === 0) return undefined;
-		return this._array.slice().reverse()[0];
-	}
-
-	push(element: T): void {
-		this._array.push(element);
-	}
-
-	pop(): void {
-		this._array.pop();
+		if (this.length === 0) return undefined;
+		return this.slice().reverse()[0];
 	}
 }

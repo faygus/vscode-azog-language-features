@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import XmlSimpleParser from './helpers/xmlsimpleparser';
-import { CompletionString } from './types';
-import { XmlDocumentRules } from './types/document-rules';
-import documentRules from "./language/language-specifications";
-import { capitalize, antiCapitalize } from './utils/string-utils';
+import XmlSimpleParser from '../helpers/xmlsimpleparser';
+import { CompletionString } from '../types';
+import { XmlDocumentRules } from '../types/document-rules';
+import documentRules from "../language/language-specifications";
+import { capitalize, antiCapitalize } from '../utils/string-utils';
 
 export default class XmlCompletionItemProvider implements vscode.CompletionItemProvider {
 
@@ -19,12 +19,11 @@ export default class XmlCompletionItemProvider implements vscode.CompletionItemP
 		token: vscode.CancellationToken,
 		_context: vscode.CompletionContext
 	): Promise<vscode.CompletionItem[] | vscode.CompletionList> {
-
 		const documentContent = textDocument.getText();
 		const offset = textDocument.offsetAt(position);
 		const scope = await XmlSimpleParser.getScopeForPosition(documentContent, offset);
-
 		if (token.isCancellationRequested ||
+			scope === undefined || 
 			scope.context === "text" ||
 			scope.tagName === undefined ||
 			scope.context === undefined) {
@@ -47,10 +46,6 @@ export default class XmlCompletionItemProvider implements vscode.CompletionItemP
 				const res = getCompletionItem(e, scope.context);
 				res.insertText = `${e.name}=""`;
 				// TODO move the cursor
-				/*const editor = vscode.window.activeTextEditor;
-				if (editor) {
-					editor.selections = [new vscode.Selection(position, position)];
-				}*/
 				return res;
 			});
 		}
@@ -61,8 +56,9 @@ export default class XmlCompletionItemProvider implements vscode.CompletionItemP
 	}
 }
 
-function getCompletionItem(data: CompletionString, detail: string | undefined): vscode.CompletionItem {
-	let completionItem = new vscode.CompletionItem(data.name, vscode.CompletionItemKind.Snippet);
+function getCompletionItem(data: CompletionString, detail: string | undefined): vscode.CompletionItem {
+	let completionItem = new vscode.CompletionItem(data.name,
+		vscode.CompletionItemKind.Snippet);
 	completionItem.detail = detail,
 		completionItem.documentation = data.comment;
 	return completionItem;

@@ -1,15 +1,16 @@
 import { expect } from "chai";
-import XmlSimpleParser from "../lib/helpers/xmlsimpleparser";
+import { getScopeForPosition } from '../lib/utils/parsing/parse-at-position';
+import { XmlTextEdition, XmlTagEdition, XmlAttributeValueEdition } from "../lib/utils/parsing/types";
 
 describe('getScopeForPosition', () => {
 	it('should return text', async () => {
-		const xml = `<Foo bar="hello world">
-	Hello
-</Foo>`;
+		const xml = `<Foo bar="hello world">Hello</Foo>`;
 		const offset = 27;
-		const res = await XmlSimpleParser.getScopeForPosition(xml, offset);
-		expect(res.context).to.equal('text');
-		expect(res.tagName).to.equal('Foo');
+		const res = await getScopeForPosition(xml, offset);
+		const expected: XmlTextEdition = {
+			text: 'Hell'
+		}
+		expect(JSON.stringify(res.edition)).to.equal(JSON.stringify(expected));
 	});
 
 	it('should return element', async () => {
@@ -17,9 +18,11 @@ describe('getScopeForPosition', () => {
 	Hello
 </Foo>`;
 		const offset = 3;
-		const res = await XmlSimpleParser.getScopeForPosition(xml, offset);
-		expect(res.tagName).to.equal('Fo');
-		expect(res.context).to.equal('element');
+		const res = await getScopeForPosition(xml, offset);
+		const expected: XmlTagEdition = {
+			tag: 'Fo'
+		};
+		expect(JSON.stringify(res.edition)).to.equal(JSON.stringify(expected));
 	});
 
 	it('should return attribute', async () => {
@@ -27,8 +30,12 @@ describe('getScopeForPosition', () => {
 	Hello
 </Foo>`;
 		const offset = 11;
-		const res = await XmlSimpleParser.getScopeForPosition(xml, offset);
-		expect(res.tagName).to.equal('Foo');
-		expect(res.context).to.equal('attribute');
+		const res = await getScopeForPosition(xml, offset);
+		const expected: XmlAttributeValueEdition = {
+			tag: 'Foo',
+			attributeName: 'bar',
+			attributeValue: 'h'
+		}
+		expect(JSON.stringify(res.edition)).to.equal(JSON.stringify(expected));
 	});
 });

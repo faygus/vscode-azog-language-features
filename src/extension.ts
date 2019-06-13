@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import AutoCompletionProvider from '../lib/auto-completion-provider';
-import XmlCompletionItemProvider from '../lib/completion-item-provider';
+import XmlCompletionItemProvider from '../lib/completion/completion-item-provider';
 import XmlFormatProvider from '../lib/formatprovider';
 import { XmlInterpreter } from '../lib/interpreter/interpreter';
 import { AzogLinter } from '../lib/linter/azog-linter';
@@ -17,7 +17,8 @@ export function activate(context: vscode.ExtensionContext) {
 	loadConfiguration();
 	let completionitemprovider = vscode.languages.registerCompletionItemProvider(
 		getDocumentSelector(),
-		new XmlCompletionItemProvider(context));
+		new XmlCompletionItemProvider(context),
+		'"', '<');
 
 	/*let formatprovider = vscode.languages.registerDocumentFormattingEditProvider(
 		getDocumentSelector(),

@@ -1,5 +1,6 @@
 import { XmlScope } from '../types';
 import * as sax from 'sax';
+import { XmlDepthPath, XmlNode } from '../utils/xml-parsing';
 
 export default class XmlSimpleParser {
 
@@ -52,57 +53,70 @@ export default class XmlSimpleParser {
 			(resolve) => {
 				let result: XmlScope;
 				let previousStartTagPosition = 0;
-				let updatePosition = () => {
+				// xmlContent += '>'; // to avoid error
 
+				let updatePosition = () => {
+					console.log('parser.startTagPosition', parser.startTagPosition);
+					console.log('parser.position', parser.position);
+					console.log('previousStartTagPosition', previousStartTagPosition);
 					if ((parser.position >= offset) && !result) {
 
 						let content = xmlContent.substring(previousStartTagPosition, offset);
-						content = content.lastIndexOf("<") >= 0 ? content.substring(content.lastIndexOf("<")) : content;
+						console.log('1', content);
+						const lastOpeningBracketIndex = content.lastIndexOf("<");
+						content = lastOpeningBracketIndex >= 0 ?
+							content.substring(lastOpeningBracketIndex) : content;
+						console.log('2', content);
 
-						let normalizedContent = content.concat(" ").replace("/", "").replace("\t", " ").replace("\n", " ").replace("\r", " ");
-						let tagName = content.substring(1, normalizedContent.indexOf(" "));
+						let normalizedContent = content.concat(" ").replace("/", "")
+							.replace("\t", " ").replace("\n", " ").replace("\r", " ");
+						console.log('normalizedContent', normalizedContent);
+						let tagName = normalizedContent.substring(1, normalizedContent.indexOf(" "));
+						console.log('tagName', tagName);
 
-						result = { tagName: /^[a-z0-9\.-_]*$/.test(tagName) ? tagName : undefined, context: undefined };
+						result = {
+							tagName: /^[a-z0-9\.-_]*$/.test(tagName) ? tagName : undefined,
+							context: undefined
+						};
 
 						if (content.lastIndexOf(">") >= content.lastIndexOf("<")) {
 							result.context = "text";
+						} else if (!/\s/.test(content)) {
+							result.context = "element";
 						} else {
-							let lastTagText = content;
-							if (!/\s/.test(lastTagText)) {
-								result.context = "element";
-							} else if (lastTagText.split(`"`).length > 0) {
-								result.context = "attribute";
-							}
+							result.context = "attribute";
 						}
 					}
-
 					previousStartTagPosition = parser.startTagPosition - 1;
 				};
 
-				parser.onerror = () => {
+				parser.onerror = (error) => {
+					console.log('\n> onerror', error);
 					parser.resume();
 				};
 
 				parser.ontext = (_t: any) => {
+					console.log('\n> ontext');
 					updatePosition();
 				};
 
-				parser.onopentag = () => {
+				parser.onopentag = (tag) => {
+					console.log('\n> onopentag', tag);
 					updatePosition();
 				};
 
-				parser.onattribute = () => {
+				parser.onattribute = (attr) => {
+					console.log('\n> onattribute', attr);
 					updatePosition();
 				};
 
-				parser.onclosetag = () => {
+				parser.onclosetag = (tag) => {
+					console.log('\n> onclosetag', tag);
 					updatePosition();
 				};
 
 				parser.onend = () => {
-					if (result === undefined) {
-						result = { tagName: undefined, context: undefined };
-					}
+					console.log('\n> onend');
 					resolve(result);
 				};
 
