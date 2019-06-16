@@ -1,24 +1,33 @@
 import * as vscode from 'vscode';
 import { XmlDiagnosticData } from '../../types';
+import { EditorEventListener } from '../../utils/document-listener';
 
-export abstract class XmlLinterProvider implements vscode.Disposable {
+export abstract class XmlLinterProvider extends EditorEventListener {
 
 	private documentListener: vscode.Disposable;
 	private diagnosticCollection: vscode.DiagnosticCollection;
-	private delayCount: number = 0;
-	private textDocument: vscode.TextDocument;
 	protected _defaultDelay = 500; // ms
 
-	constructor(protected extensionContext: vscode.ExtensionContext) {
+	constructor() {
+		super();
 		this.diagnosticCollection = vscode.languages.createDiagnosticCollection();
-		this.documentListener = vscode.workspace.onDidChangeTextDocument(evnt =>
-			this.triggerDelayedLint(evnt.document), this, this.extensionContext.subscriptions);
-		vscode.workspace.onDidOpenTextDocument(doc =>
-			this.triggerDelayedLint(doc, 100), this, extensionContext.subscriptions);
-		vscode.workspace.onDidCloseTextDocument(doc =>
-			this.cleanupDocument(doc), null, extensionContext.subscriptions);
-		vscode.workspace.textDocuments.forEach(doc =>
-			this.triggerDelayedLint(doc, 100), this);
+		this.listen(vscode.workspace.onDidChangeTextDocument, (event) => {
+			this.triggerLint(event.document);
+		});
+		this.listen(vscode.workspace.onDidOpenTextDocument, (event) => {
+			this.triggerLint(event);
+		});
+		this.listen(vscode.workspace.onDidCloseTextDocument, (event) => {
+			this.cleanupDocument(event);
+		});
+		this.listen(vscode.workspace.onDidCloseTextDocument, (event) => {
+			this.triggerLint(event);
+		});
+		vscode.workspace.textDocuments.forEach(doc => {
+			setTimeout(() => {
+				this.triggerLint(doc);
+			}, 100);
+		});
 	}
 
 	public dispose() {
@@ -28,25 +37,6 @@ export abstract class XmlLinterProvider implements vscode.Disposable {
 
 	private cleanupDocument(textDocument: vscode.TextDocument): void {
 		this.diagnosticCollection.delete(textDocument.uri);
-	}
-
-	private async triggerDelayedLint(textDocument: vscode.TextDocument, timeout: number = this._defaultDelay): Promise<void> {
-		if (this.delayCount > 0) {
-			this.delayCount = timeout;
-			this.textDocument = textDocument;
-			return;
-		}
-		this.delayCount = timeout;
-		this.textDocument = textDocument;
-
-		const tick = 100;
-
-		while (this.delayCount > 0) {
-			await new Promise(resolve => setTimeout(resolve, tick));
-			this.delayCount -= tick;
-		}
-
-		this.triggerLint(this.textDocument);
 	}
 
 	private async triggerLint(textDocument: vscode.TextDocument): Promise<void> {
@@ -82,35 +72,3 @@ export abstract class XmlLinterProvider implements vscode.Disposable {
 
 	protected abstract getDiagnostics(text: string): Promise<XmlDiagnosticData[]>;
 }
-
-/*async function getXmlTagCollections(text: string, schemaPropertiesArray: XmlSchemaPropertiesArray): Promise<XmlTagCollection[]> {
-	let xsdFileUris = [vscode.Uri.parse(
-		"file:///Users/j-sdurier/Documents/development/tests/vscode-xml-complete/example/note.xsd"
-	)];
-	let xsdFileUris = (await XmlSimpleParser.getSchemaXsdUris(text, globalSettings.schemaMapping))
-		.map(u => vscode.Uri.parse(u))
-		.filter((v, i, a) => a.findIndex(u => u.toString() === v.toString()) === i);
-	if (xsdFileUris.length === 0) {
-		return [new XmlTagCollection()];
-	}
-	const res: XmlTagCollection[] = [];
-	for (let xsdUri of xsdFileUris) {
-		let schemaProperties = schemaPropertiesArray.get(xsdUri);
-		if (schemaProperties === undefined) {
-			schemaProperties = { schemaUri: xsdUri, xsdContent: ``, tagCollection: new XmlTagCollection() } as XmlSchemaProperties;
-			try {
-				schemaProperties.xsdContent = await XsdLoader.loadSchemaContentsFromUri(xsdUri.toString(true));
-				schemaProperties.tagCollection = await XsdParser.getSchemaTagsAndAttributes(schemaProperties.xsdContent);
-				vscode.window.showInformationMessage(`Loaded ...${xsdUri.toString().substr(xsdUri.path.length - 16)}`);
-			}
-			catch (err) {
-				vscode.window.showErrorMessage(err.toString());
-			} finally {
-				schemaPropertiesArray.push(schemaProperties);
-			}
-		}
-		// const strict = !globalSettings.schemaMapping.find(m => m.xsdUri === xsdUri.toString() && m.strict === false);
-		res.push(schemaProperties.tagCollection);
-	}
-	return res;
-}*/

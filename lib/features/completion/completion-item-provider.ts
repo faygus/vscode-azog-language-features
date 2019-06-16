@@ -6,7 +6,7 @@ import { XmlEditionType } from '../../utils/parsing/types';
 
 export default class XmlCompletionItemProvider implements vscode.CompletionItemProvider {
 
-	constructor(protected extensionContext: vscode.ExtensionContext) {
+	constructor() {
 	}
 
 	/**
