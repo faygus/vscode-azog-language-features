@@ -58,7 +58,36 @@ class JsonInterpreter {
 			if (typeof value !== 'string') {
 				throw new Error(`${JSON.stringify(value)} is not assignable to ${tag}.${name}`);
 			}
-			return values.indexOf(value);
+			const index = values.indexOf(value);
+			if (index < 0) {
+				throw new Error(`${value} is not assignable to ${tag}.${name}`);
+			}
+			return index;
+		}
+		if (typeof value === 'object') {
+			const subAttributes = attribute.getAllSubAttributes();
+			const res: any = {};
+			for (const subAttributeName in value) {
+				const subAttribute = subAttributes.find(a => a.name === subAttributeName);
+				if (!subAttribute) {
+					throw new Error(`no sub attribute ${subAttributeName} in ${tag}.${name}`);
+				}
+				const subAttributeValue = value[subAttributeName];
+				if (XmlAttributeWithEnumType.typeIsEnum(subAttribute)) {
+					const values = XmlAttributeWithEnumType.getEnum(subAttribute);
+					if (typeof subAttributeValue !== 'string') {
+						throw new Error(`${JSON.stringify(subAttributeValue)} is not assignable to ${tag}.${name}.${subAttributeName}`);
+					}
+					const index = values.indexOf(subAttributeValue);
+					if (index < 0) {
+						throw new Error(`${subAttributeValue} is not assignable to ${tag}.${name}.${subAttributeName}`);
+					}
+					res[subAttributeName] = index;
+				} else {
+					res[subAttributeName] = subAttributeValue;
+				}
+			}
+			return res;
 		}
 		return value;
 	}

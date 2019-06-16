@@ -47,7 +47,7 @@
     "test": "TS_NODE_PROJECT='./tests/tsconfig.json' mocha --require ts-node/register tests/**/*test.ts",
     "package": "vsce package",
     "release": "standard-version",
-		"build-lib": "tsc -p ./lib/tsconfig.json",
+		"build::lib": "tsc -p ./lib/tsconfig.json",
 		"manual-test": "ts-node --project ./tests/manual/tsconfig.json ./tests/manual/index.ts"
   },
   "dependencies": {

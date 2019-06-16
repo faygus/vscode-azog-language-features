@@ -10,10 +10,6 @@ export const tags: ITagsDefinitions = {
 				type: 'string',
 				comment: 'value of the text'
 			},
-			'color': {
-				type: ['red', 'green', 'blue', 'orange', 'yellow', 'brown', 'black', 'white', 'purple'],
-				comment: 'color that you want bro'
-			},
 			'style': {
 				type: controlWFStyle,
 				comment: 'style of the text'

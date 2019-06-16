@@ -1,3 +1,3 @@
-import { run } from './5';
+import { run } from './6';
 
 run();
