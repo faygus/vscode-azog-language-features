@@ -1,4 +1,4 @@
-import { IJsonData } from "../types/json-data";
+import { IJsonData, IJsonAttribute } from "../types/json-data";
 import { antiCapitalize } from "../utils/string-utils";
 import { XmlDocumentRules, XmlAttributeWithEnumType } from "../types/document-rules";
 
@@ -44,7 +44,7 @@ class JsonInterpreter {
 	 * size: 'Small' returns 0
 	 * size: 'Medium' returns 1
 	 */
-	private processAttribute(tag: string, name: string, value: string | { [key: string]: string }) {
+	private processAttribute(tag: string, name: string, value: IJsonAttribute) {
 		const element = this._rules.getElement(tag);
 		if (!element) {
 			throw new Error(`no element ${tag}`);
