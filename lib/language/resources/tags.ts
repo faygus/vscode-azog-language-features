@@ -10,6 +10,10 @@ export const tags: ITagsDefinitions = {
 				type: 'string',
 				comment: 'value of the text'
 			},
+			'color': {
+				type: ['red', 'green', 'blue', 'orange', 'yellow', 'brown', 'black', 'white', 'purple'],
+				comment: 'color that you want bro'
+			},
 			'style': {
 				type: controlWFStyle,
 				comment: 'style of the text'
@@ -21,7 +25,7 @@ export const tags: ITagsDefinitions = {
 		comment: 'shows a basic icon control for wireframe interface',
 		attributes: {
 			'iconName': {
-				type: 'string',
+				type: ['calendar', 'user', 'female', 'users', 'dashboard'],
 				comment: 'icon'
 			},
 			'style': {

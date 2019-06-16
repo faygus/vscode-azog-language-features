@@ -1,11 +1,9 @@
 import * as vscode from 'vscode';
 import AutoCompletionProvider from '../lib/auto-completion-provider';
-import XmlCompletionItemProvider from '../lib/completion/completion-item-provider';
-import XmlFormatProvider from '../lib/formatprovider';
+import XmlCompletionItemProvider from '../lib/features/completion/completion-item-provider';
+import { AzogLinter } from '../lib/features/linter/azog-linter';
 import { XmlInterpreter } from '../lib/interpreter/interpreter';
-import { AzogLinter } from '../lib/linter/azog-linter';
-import XmlRangeFormatProvider from '../lib/rangeformatprovider';
-import { XmlCompleteSettings, XmlSchemaPropertiesArray } from '../lib/types';
+import { XmlCompleteSettings } from '../lib/types';
 
 export declare let globalSettings: XmlCompleteSettings;
 

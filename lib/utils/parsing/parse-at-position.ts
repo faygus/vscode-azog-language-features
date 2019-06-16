@@ -1,11 +1,10 @@
 import * as sax from 'sax';
 import { XmlDepthPath, XmlNode } from '../xml-parsing';
-import {
-	XmlEditionInDepth, AnyXmlEdition, XmlTagEdition,
-	XmlTextEdition, XmlAttributeNameEdition,
-	XmlAttributeValueEdition
-} from './types';
+import { AnyXmlEdition, XmlAttributeNameEdition, XmlAttributeValueEdition, XmlEditionInDepth, XmlTagEdition, XmlTextEdition } from './types';
 
+/**
+ * function which gives info about where is the cursor
+ */
 export function getScopeForPosition(xmlContent: string, offset: number): Promise<XmlEditionInDepth> {
 
 	const parser = sax.parser(true);
@@ -87,16 +86,15 @@ function parseAtPosition(xmlContent: string, offset: number,
 		.split('=').map(e => e.trim()).join('=') // remove spaces around '='
 		.split(' ').filter(e => e.length).join(' ') // remove useless spaces
 		.substring(1); // remove <
-	console.log('normalizedContent', normalizedContent);
 	const endOfTag = normalizedContent.indexOf(' ');
 	const onlyTag = endOfTag < 0;
 	let tagName = onlyTag ? normalizedContent :
 		normalizedContent.substring(0, endOfTag);
-	const validTagName = /^[a-z0-9\.-_]*$/.test(tagName) ? tagName : undefined;
+	// const validTagName = /^[a-z0-9\.-_]*$/.test(tagName) ? tagName : undefined;
 	if (onlyTag) {
-		const res: XmlTagEdition = {
+		const res = new XmlTagEdition({
 			tag: tagName
-		};
+		});
 		return res;
 	}
 	if (normalizedContent.indexOf('>') < 0) { // edition of an attribute
@@ -106,9 +104,9 @@ function parseAtPosition(xmlContent: string, offset: number,
 	}
 	if (contentToAnalyse.lastIndexOf('>') >= contentToAnalyse.lastIndexOf('<')) {
 		const text = contentToAnalyse.substring(contentToAnalyse.lastIndexOf('>') + 1);
-		const res: XmlTextEdition = {
+		const res = new XmlTextEdition({
 			text
-		};
+		});
 		return res;
 	}
 };
@@ -123,10 +121,10 @@ function parseAttributes(tag: string, attributesLine: string): XmlAttributeNameE
 	const array = lastAttribute.split('=');
 	const attributeName = array[0];
 	if (array.length === 1) {
-		const res: XmlAttributeNameEdition = {
+		const res = new XmlAttributeNameEdition({
 			tag,
 			attributeName
-		};
+		});
 		return res;
 	}
 	let attributeValue = array[1];
@@ -135,11 +133,14 @@ function parseAttributes(tag: string, attributesLine: string): XmlAttributeNameE
 			throw new Error('attribute not valid');
 		}
 		attributeValue = attributeValue.substring(1);
-		const res: XmlAttributeValueEdition = {
+		if (attributeValue.indexOf('"') >= 0) { // attribue value between ""
+			return undefined; // TODO check if '\"' pattern
+		}
+		const res = new XmlAttributeValueEdition({
 			tag,
 			attributeName,
 			attributeValue
-		};
+		});
 		return res;
 	}
 }

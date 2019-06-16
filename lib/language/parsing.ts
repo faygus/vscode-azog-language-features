@@ -6,7 +6,7 @@ export function isSimpleType(data: PropertyType): data is SimpleType {
 }
 
 export function isComplexType(data: PropertyType): data is ComplexType {
-	return typeof data === 'object';
+	return typeof data === 'object' && !Array.isArray(data);
 }
 
 export function parseXmlAttribute(attributeName: string,

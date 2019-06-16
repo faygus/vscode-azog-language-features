@@ -1,6 +1,5 @@
-import { XmlScope } from '../types';
 import * as sax from 'sax';
-import { XmlDepthPath, XmlNode } from '../utils/xml-parsing';
+import { XmlScope } from '../types';
 
 export default class XmlSimpleParser {
 
@@ -56,23 +55,16 @@ export default class XmlSimpleParser {
 				// xmlContent += '>'; // to avoid error
 
 				let updatePosition = () => {
-					console.log('parser.startTagPosition', parser.startTagPosition);
-					console.log('parser.position', parser.position);
-					console.log('previousStartTagPosition', previousStartTagPosition);
 					if ((parser.position >= offset) && !result) {
 
 						let content = xmlContent.substring(previousStartTagPosition, offset);
-						console.log('1', content);
 						const lastOpeningBracketIndex = content.lastIndexOf("<");
 						content = lastOpeningBracketIndex >= 0 ?
 							content.substring(lastOpeningBracketIndex) : content;
-						console.log('2', content);
 
 						let normalizedContent = content.concat(" ").replace("/", "")
 							.replace("\t", " ").replace("\n", " ").replace("\r", " ");
-						console.log('normalizedContent', normalizedContent);
 						let tagName = normalizedContent.substring(1, normalizedContent.indexOf(" "));
-						console.log('tagName', tagName);
 
 						result = {
 							tagName: /^[a-z0-9\.-_]*$/.test(tagName) ? tagName : undefined,
@@ -91,32 +83,26 @@ export default class XmlSimpleParser {
 				};
 
 				parser.onerror = (error) => {
-					console.log('\n> onerror', error);
 					parser.resume();
 				};
 
 				parser.ontext = (_t: any) => {
-					console.log('\n> ontext');
 					updatePosition();
 				};
 
 				parser.onopentag = (tag) => {
-					console.log('\n> onopentag', tag);
 					updatePosition();
 				};
 
 				parser.onattribute = (attr) => {
-					console.log('\n> onattribute', attr);
 					updatePosition();
 				};
 
 				parser.onclosetag = (tag) => {
-					console.log('\n> onclosetag', tag);
 					updatePosition();
 				};
 
 				parser.onend = () => {
-					console.log('\n> onend');
 					resolve(result);
 				};
 

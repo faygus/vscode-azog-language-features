@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { XmlSchemaPropertiesArray } from './types';
-import XmlSimpleParser from './helpers/xmlsimpleparser';
 
 export default class XmlFormatProvider /*implements vscode.DocumentFormattingEditProvider*/ {
 

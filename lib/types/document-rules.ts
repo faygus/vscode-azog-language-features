@@ -53,9 +53,25 @@ export class XmlAttribute {
 	}
 
 	getAllSubAttributes(): XmlAttribute[] {
-		if (Array.isArray(this.type)) {
-			return <XmlAttribute[]>this.type;
+		if (Array.isArray(this.type) && this.type.length > 0) {
+			if (typeof this.type[0] !== 'string') {
+				return <XmlAttribute[]>this.type;
+			}
 		}
 		return [];
+	}
+}
+
+export class XmlAttributeWithEnumType {
+	static typeIsEnum(attribute: XmlAttribute): boolean {
+		return Array.isArray(attribute.type) && attribute.type.length > 0 &&
+			typeof attribute.type[0] === 'string';
+	}
+
+	static getEnum(attribute: XmlAttribute): string[] {
+		if (!XmlAttributeWithEnumType.typeIsEnum(attribute)) {
+			return [];
+		}
+		return <EnumType>(attribute.type);
 	}
 }

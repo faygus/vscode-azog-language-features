@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { XmlDiagnosticData } from '../types';
+import { XmlDiagnosticData } from '../../types';
 
 export abstract class XmlLinterProvider implements vscode.Disposable {
 

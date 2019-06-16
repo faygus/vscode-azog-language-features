@@ -44,7 +44,9 @@ export default class AutoCompletionProvider extends EditorEventListener {
 		}
 
 		const scope = await XmlSimpleParser.getScopeForPosition(`${wholeLineText}\n`, linePosition);
-
+		if (!scope) {
+			return;
+		}
 		if (--linePosition < 0) {
 			// NOTE: automatic acions require info about previous char
 			return;

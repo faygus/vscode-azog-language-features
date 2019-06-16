@@ -1,21 +1,61 @@
 import { XmlNode } from "../xml-parsing";
 
-export interface XmlTagEdition {
+export class XmlTagEdition {
+	tag: string;
+
+	constructor(data: IXmlTagEdition) {
+		this.tag = data.tag;
+	}
+}
+
+export class XmlAttributeNameEdition {
+	tag: string;
+	attributeName: string;
+
+	constructor(data: IXmlAttributeNameEdition) {
+		this.tag = data.tag;
+		this.attributeName = data.attributeName;
+	}
+}
+
+export class XmlAttributeValueEdition {
+	tag: string;
+	attributeName: string;
+	attributeValue: string;
+
+	constructor(data: IXmlAttributeValueEdition) {
+		this.tag = data.tag;
+		this.attributeName = data.attributeName;
+		this.attributeValue = data.attributeValue;
+	}
+}
+
+export class XmlTextEdition {
+	text: string;
+
+	constructor(data: IXmlTextEdition) {
+		this.text = data.text;
+	}
+}
+
+// interfaces
+
+interface IXmlTagEdition {
 	tag: string;
 }
 
-export interface XmlAttributeNameEdition {
+interface IXmlAttributeNameEdition {
 	tag: string;
 	attributeName: string;
 }
 
-export interface XmlAttributeValueEdition {
+interface IXmlAttributeValueEdition {
 	tag: string;
 	attributeName: string;
 	attributeValue: string;
 }
 
-export interface XmlTextEdition {
+interface IXmlTextEdition {
 	text: string;
 }
 
@@ -26,14 +66,14 @@ export enum XmlEditionType {
 	TEXT
 }
 
-export interface EdtionTypeMapping {
+export interface IEdtionTypeMapping {
 	[XmlEditionType.TAG]: XmlTagEdition;
 	[XmlEditionType.ATTRIBUTE_NAME]: XmlAttributeNameEdition;
 	[XmlEditionType.ATTRIBUTE_VALUE]: XmlAttributeValueEdition;
 	[XmlEditionType.TEXT]: XmlTextEdition;
 }
 
-export type XmlEdition<T extends XmlEditionType> = EdtionTypeMapping[T];
+export type XmlEdition<T extends XmlEditionType> = IEdtionTypeMapping[T];
 
 export type AnyXmlEdition = XmlEdition<XmlEditionType>;
 
