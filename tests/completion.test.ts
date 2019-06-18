@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { computeCompletion } from "../lib/features/completion/compute";
+import { computeCompletion } from "../lib/features/completion/utils/compute";
 import { CompletionString } from "../lib/types";
 import { capitalize } from "../lib/utils/string-utils";
 import { mockDocumentRules, mockTags } from "./utils/fake-rules";

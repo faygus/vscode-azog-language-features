@@ -15,6 +15,7 @@ export class XmlDiagnosticDataManager {
 		return new Promise<XmlDiagnosticData[]>(
 			(resolve) => {
 				const parser = sax.parser(true);
+				sax.parser
 				let res: XmlDiagnosticData[] = [];
 				const xmlDepthPath = new XmlDepthPath();
 

@@ -1,8 +1,8 @@
-import { CompletionString } from '../../types';
-import { XmlDocumentRules, XmlAttributeWithEnumType } from '../../types/document-rules';
-import { getScopeForPosition } from '../../utils/parsing/parse-at-position';
-import { XmlAttributeNameEdition, XmlAttributeValueEdition, XmlTagEdition, XmlEditionType } from '../../utils/parsing/types';
-import { antiCapitalize, capitalize } from '../../utils/string-utils';
+import { CompletionString } from '../../../types';
+import { XmlDocumentRules, XmlAttributeWithEnumType } from '../../../types/document-rules';
+import { getScopeForPosition } from '../../../utils/parsing/parse-at-position';
+import { XmlAttributeNameEdition, XmlAttributeValueEdition, XmlTagEdition, XmlEditionType } from '../../../utils/parsing/types';
+import { antiCapitalize, capitalize } from '../../../utils/string-utils';
 
 interface CompletionInfos {
 	scope: XmlEditionType;

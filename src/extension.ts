@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
 	loadConfiguration();
 	let completionitemprovider = vscode.languages.registerCompletionItemProvider(
 		getDocumentSelector(),
-		new XmlCompletionItemProvider(context),
+		new XmlCompletionItemProvider(),
 		'"', '<');
 
 	/*let formatprovider = vscode.languages.registerDocumentFormattingEditProvider(
@@ -26,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 		getDocumentSelector(),
 		new XmlRangeFormatProvider(context, schemaPropertiesArray));*/
 
-	let linterprovider = new AzogLinter(context);
+	let linterprovider = new AzogLinter();
 
 	let autocompletionprovider = new AutoCompletionProvider();
 	let xmlInterpreter = new XmlInterpreter();

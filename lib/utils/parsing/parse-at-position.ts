@@ -6,7 +6,7 @@ import { AnyXmlEdition, XmlAttributeNameEdition, XmlAttributeValueEdition, XmlEd
  * function which gives info about where is the cursor
  */
 export function getScopeForPosition(xmlContent: string, offset: number): Promise<XmlEditionInDepth> {
-
+	// TODO do not use sax but AmlParser
 	const parser = sax.parser(true);
 	const parse = () => {
 		return parseAtPosition(xmlContent, offset, parser.position);

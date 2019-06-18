@@ -44,11 +44,12 @@
     "compile": "tsc -p ./src",
     "tslint": "tslint ./src/**/*.ts",
     "watch": "tsc -w -p ./src",
-    "test": "TS_NODE_PROJECT='./tests/tsconfig.json' mocha --require ts-node/register tests/**/*test.ts",
+    "test": "TS_NODE_PROJECT='./tests/tsconfig.json' mocha --require ts-node/register tests/*test.ts",
     "package": "vsce package",
     "release": "standard-version",
 		"build::lib": "tsc -p ./lib/tsconfig.json",
-		"manual-test": "ts-node --project ./tests/manual/tsconfig.json ./tests/manual/index.ts"
+		"manual-test": "ts-node --project ./tests/manual/tsconfig.json ./tests/manual/index.ts",
+		"test-partial": "TS_NODE_PROJECT='./tests/tsconfig.json' mocha --require ts-node/register tests/partial/*test.ts"
   },
   "dependencies": {
     "get-uri": "2.0.3",

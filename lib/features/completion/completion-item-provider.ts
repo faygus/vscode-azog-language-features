@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import documentRules from "../../language/language-specifications";
 import { CompletionString } from '../../types';
-import { computeCompletion } from './compute';
+import { computeCompletion } from './utils/compute';
 import { XmlEditionType } from '../../utils/parsing/types';
 
 export default class XmlCompletionItemProvider implements vscode.CompletionItemProvider {

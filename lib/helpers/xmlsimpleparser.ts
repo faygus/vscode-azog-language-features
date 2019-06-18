@@ -130,7 +130,9 @@ export default class XmlSimpleParser {
 			});
 	}
 
-	public static formatXml(xmlContent: string, indentationString: string, eol: string, formattingStyle: "singleLineAttributes" | "multiLineAttributes" | "fileSizeOptimized"): Promise<string> {
+	public static formatXml(xmlContent: string, indentationString: string, eol: string,
+		formattingStyle: "singleLineAttributes" | "multiLineAttributes"
+			| "fileSizeOptimized"): Promise<string> {
 		const sax = require("sax");
 		const parser = sax.parser(true);
 
