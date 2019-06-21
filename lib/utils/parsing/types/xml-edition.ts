@@ -1,4 +1,4 @@
-import { XmlNode } from "../xml-parsing";
+import { XmlNode } from "./xml-node";
 
 export class XmlTagEdition {
 	tag: string;
@@ -77,7 +77,7 @@ export type XmlEdition<T extends XmlEditionType> = IEdtionTypeMapping[T];
 
 export type AnyXmlEdition = XmlEdition<XmlEditionType>;
 
-export type XmlEditionInDepth = {
+export type XmlEditionInContext = {
 	edition: AnyXmlEdition | undefined,
 	parents: XmlNode[];
 }

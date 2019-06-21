@@ -1,41 +1,45 @@
+import { XmlDepthPath, XmlNode } from "../types/xml-node";
+import { AmlParsingResults, AttributeNameListener, AttributeValueListener, ErrorListener, IAmlParsingResult, ParsingType, TagOpenedListener, OpenTagInfos, AttributeNameInfos, AttributeValueInfos } from "./types/aml-parsing-result";
+import { CodeUnitFactory } from "./code-unit-factory";
 import { AmlParsingError, AmlParsingErrorType } from "./error";
 import { tokens } from "./tokens";
-import { ParsedTags } from "./tags-types";
-import { AmlParsingResults, ParsingType, TagOpenedListener, AttributeNameListener, AttributeValueListener, ErrorListener } from "./aml-parsing-result";
+import { CodeSequence } from "./types/code-sequence";
 
 /*
 ** AML means Azog markup language
 */
 export class AMLParser {
+	public codeSequence = new CodeSequence();
+	public parsingResults = new AmlParsingResults();
+
 	private _tagOpenedListener?: TagOpenedListener;
 	private _attributeNameListener?: AttributeNameListener;
 	private _attributeValueListener?: AttributeValueListener;
 	private _errorListener?: ErrorListener;
 
 	private _stringParser: StringParser;
-	private _parsedTags = new ParsedTags();
-	private _parsingResults = new AmlParsingResults();
+	private _nodesPath = new XmlDepthPath();
 
-	constructor() {
+	constructor(private _data: string) {
+		this._stringParser = new StringParser(this._data);
 	}
 
-	parse(data: string): AmlParsingResults {
-		const stringParser = new StringParser(data);
-		this._stringParser = stringParser;
-		while (stringParser.currentChar) {
+	parse(): AmlParsingResults {
+		while (this._stringParser.currentChar) {
 			this.parseNewTag();
 		}
-		return this._parsingResults;
+		return this.parsingResults;
 	}
 
 	private parseNewTag(): void {
 		const stringParser = this._stringParser;
-		const parsedTags = this._parsedTags;
 		const beforeTag = stringParser.navigateUntil(tokens.tagOpenBracket);
-		if (beforeTag.text.trim().length > 0) {
-			if (!parsedTags.hasTagsOpened()) {
-				this.throwError(stringParser.offset, AmlParsingErrorType.TEXT_OUTSIDE_NODE);
-			}
+		const beforeTagParser = new StringParser(beforeTag.text);
+		if (beforeTagParser.hasText) {
+			const textStart = beforeTagParser.navigateToFirstNonEmptyChar().offset;
+			this.codeSequence.add(CodeUnitFactory.createTextOutsideNode(textStart,
+				beforeTag.text.trim()));
+			this.throwError(beforeTag.offset, AmlParsingErrorType.TEXT_OUTSIDE_NODE);
 		}
 		if (!beforeTag.stopPattern) {
 			return;
@@ -48,34 +52,40 @@ export class AMLParser {
 		}
 		const tagInfos = stringParser.navigateUntil([tokens.tagCloseBracket, selfCloseToken, ...whiteSpaceCharacters]);
 		const tag = tagInfos.text;
-		parsedTags.openTag(tag);
-		this.emitTagOpened(tagInfos.text, stringParser.offset - tagInfos.stopPattern.length);
+		this.registerTag(tag, tagInfos.offset);
 		if (tagInfos.stopPattern === selfCloseToken) {
-			parsedTags.closeLastTag();
+			this._nodesPath.pop();
 			return;
 		} else if (tagInfos.stopPattern === tokens.tagCloseBracket) {
 			return;
 		}
-		stringParser.navigateToFirstNonEmptyChar();
-		if (stringParser.nextString.startsWith(selfCloseToken)) {
-			parsedTags.closeLastTag();
-			stringParser.next(selfCloseToken.length);
-			return;
+		if (this.checkCloseTag()) return;
+		this.parseAttribute(tag);
+	}
+
+	/**
+	 * returns true if the tag is closed
+	 */
+	private checkCloseTag(): boolean {
+		this._stringParser.navigateToFirstNonEmptyChar();
+		if (this._stringParser.nextString.startsWith(selfCloseToken)) {
+			this._nodesPath.pop();
+			this._stringParser.next(selfCloseToken.length);
+			return true;
 		}
-		if (stringParser.nextString.startsWith(tokens.tagCloseBracket)) {
-			stringParser.next(tokens.tagCloseBracket.length);
-			return;
+		if (this._stringParser.nextString.startsWith(tokens.tagCloseBracket)) {
+			this._stringParser.next(tokens.tagCloseBracket.length);
+			return true;
 		}
-		this.parseAttribute();
+		return false;
 	}
 
 	private parseCloseTag(): void {
-		const stringParser = this._stringParser;
-		stringParser.navigateToFirstNonEmptyChar();
-		const infos = stringParser.navigateUntil([tokens.tagCloseBracket, ...whiteSpaceCharacters]);
-		const offset = stringParser.offset - infos.stopPattern.length;
+		this._stringParser.navigateToFirstNonEmptyChar();
+		const infos = this._stringParser.navigateUntil([tokens.tagCloseBracket, ...whiteSpaceCharacters]);
+		const offset = this._stringParser.offset - infos.stopPattern.length;
 		if (infos.text) {
-			if (!this._parsedTags.closeTag(infos.text)) {
+			if (!this._nodesPath.closeTag(infos.text)) {
 				this.throwError(offset, AmlParsingErrorType.UNMATCHED_CLOSING_TAG);
 			}
 		} else {
@@ -84,48 +94,32 @@ export class AMLParser {
 		if (infos.stopPattern === tokens.tagCloseBracket) {
 			return;
 		}
-		stringParser.navigateUntil(tokens.tagCloseBracket);
+		this._stringParser.navigateUntil(tokens.tagCloseBracket);
 	}
 
-	private parseAttribute(): void {
-		const tag = this._parsedTags.lastOpenedTag;
-		if (!tag) {
-			return;
-		}
+	private parseAttribute(tag: string): void {
 		// parse attribute name
-		const stringParser = this._stringParser;
-		if (!stringParser.navigateToFirstNonEmptyChar()) {
-			return;
-		}
-		if (stringParser.nextString.startsWith(selfCloseToken)) {
-			this._parsedTags.closeLastTag();
-			stringParser.next(selfCloseToken.length);
-			return;
-		}
-		if (stringParser.nextString.startsWith(tokens.tagCloseBracket)) {
-			stringParser.next(tokens.tagCloseBracket.length);
-			return;
-		}
-		const attributeNameInfos = stringParser.navigateUntil([tokens.equal, tokens.tagCloseBracket, ...whiteSpaceCharacters]);
+		const attributeNameInfos = this._stringParser.navigateUntil([tokens.equal, tokens.tagCloseBracket, ...whiteSpaceCharacters]);
 		const attributeName = attributeNameInfos.text;
-		const attributeNameOffset = stringParser.offset - attributeNameInfos.stopPattern.length;
+		const attributeNameOffset = attributeNameInfos.offset;
 		if (attributeNameInfos.stopPattern === tokens.tagCloseBracket) {
-			this.throwError(attributeNameOffset, AmlParsingErrorType.ATTRIBUTE_WITHOUT_VALUE);
+			this.registerAttributeWithoutValue(attributeName, attributeNameOffset);
 			return;
 		}
 		if (Utils.charIsEmpty(attributeNameInfos.stopPattern)) {
-			if (stringParser.navigateToFirstNonEmptyChar() !== tokens.equal) {
-				this.throwError(attributeNameOffset, AmlParsingErrorType.ATTRIBUTE_WITHOUT_VALUE);
-				return this.parseAttribute();
+			if (this._stringParser.navigateToFirstNonEmptyChar().currentChar !== tokens.equal) {
+				this.registerAttributeWithoutValue(attributeName, attributeNameOffset);
+				if (this.checkCloseTag()) return;
+				return this.parseAttribute(tag);
 			}
-			stringParser.next();
+			this._stringParser.next(); // skip the equal char
 		}
-		this.emitAttributeName(tag.name, attributeName, attributeNameOffset);
+		this.registerAttributeName(tag, attributeName, attributeNameOffset);
 		// parse attribute value
-		const firstAttributeValueChar = stringParser.navigateToFirstNonEmptyChar();
+		const firstAttributeValueChar = this._stringParser.navigateToFirstNonEmptyChar().currentChar;
 		if (firstAttributeValueChar === tokens.quote) {
-			stringParser.next();
-			const attributeValueInfos = stringParser.navigateUntil({
+			this._stringParser.next();
+			const attributeValueInfos = this._stringParser.navigateUntil({
 				isValid(data) {
 					if (data.length === 0) return null;
 					const reversedString = data.split('').reverse().join('');
@@ -144,12 +138,12 @@ export class AMLParser {
 				}
 			});
 			const attributeValue = attributeValueInfos.text;
-			const offset = stringParser.offset - attributeValueInfos.stopPattern.length;
-			this.emitAttributeValue(tag.name, attributeName, attributeValue, offset);
+			this.registerAttributeValue(attributeValue, attributeValueInfos.offset);
 		} else {
 			// TODO attribute inside {...}
 		}
-		return this.parseAttribute();
+		if (this.checkCloseTag()) return;
+		return this.parseAttribute(tag);
 	}
 
 	set onTagOpened(value: TagOpenedListener) {
@@ -169,43 +163,35 @@ export class AMLParser {
 	}
 
 	private emitTagOpened(tag: string, offset: number): void {
+		const parsingElement = new OpenTagInfos(offset, tag);
 		if (this._tagOpenedListener) {
-			this._tagOpenedListener({
-				tag, offset
-			});
+			this._tagOpenedListener(parsingElement);
 		}
-		this._parsingResults.add({
+		this.parsingResults.add({
 			parsingType: ParsingType.OPEN_TAG,
-			detail: {
-				tag,
-				offset
-			}
-		})
+			detail: parsingElement
+		});
 	}
 
 	private emitAttributeName(tag: string, attributeName: string, offset: number): void {
+		const parsingElement = new AttributeNameInfos(offset, attributeName);
 		if (this._attributeNameListener) {
-			this._attributeNameListener({ attributeName, offset });
+			this._attributeNameListener(parsingElement);
 		}
-		this._parsingResults.add({
+		this.parsingResults.add({
 			parsingType: ParsingType.ATTRIBUTE_NAME,
-			detail: {
-				attributeName,
-				offset
-			}
+			detail: parsingElement
 		});
 	}
 
 	private emitAttributeValue(tag: string, attributeName: string, attributeValue: string, offset: number): void {
+		const parsingElement = new AttributeValueInfos(offset, attributeValue);
 		if (this._attributeValueListener) {
-			this._attributeValueListener({ attributeValue, offset });
+			this._attributeValueListener(parsingElement);
 		}
-		this._parsingResults.add({
+		this.parsingResults.add({
 			parsingType: ParsingType.ATTRIBUTE_VALUE,
-			detail: {
-				attributeValue,
-				offset
-			}
+			detail: parsingElement
 		});
 	}
 
@@ -217,29 +203,65 @@ export class AMLParser {
 		if (this._errorListener) {
 			this._errorListener(error);
 		}
-		this._parsingResults.add({
+		this.parsingResults.add({
 			parsingType: ParsingType.ERROR,
 			detail: error
 		});
 	}
+
+	private registerTag(tag: string, endOffset: number): void {
+		this._nodesPath.push(new XmlNode(tag));
+		this.emitTagOpened(tag, endOffset);
+		this.codeSequence.add(CodeUnitFactory.createTag(endOffset - tag.length, tag));
+	}
+
+	private registerAttributeWithoutValue(attributeName: string, endOffset: number): void {
+		const offset = endOffset - attributeName.length;
+		this.throwError(offset, AmlParsingErrorType.ATTRIBUTE_WITHOUT_VALUE);
+		this.codeSequence.add(CodeUnitFactory.createAttributeWithoutValue(offset, attributeName));
+	}
+
+	private registerAttributeName(tag: string, attributeName: string, endOffset: number): void {
+		this.emitAttributeName(tag, attributeName, endOffset);
+		const offset = endOffset - attributeName.length;
+		this.codeSequence.add(CodeUnitFactory.createAttributeName(offset, attributeName));
+	}
+
+	private registerAttributeValue(attributeValue: string, endOffset: number): void {
+		const lastParsing = <IAmlParsingResult<ParsingType.ATTRIBUTE_NAME>>this.parsingResults.last;
+		const attributeName = lastParsing.detail.attributeName;
+		const offset = endOffset - attributeValue.length;
+		const tagInfos = this._nodesPath.getFirstParentNode();
+		if (!tagInfos) {
+			return;
+		}
+		this.emitAttributeValue(tagInfos.tag, attributeName, attributeValue, endOffset);
+		this.codeSequence.add(CodeUnitFactory.createAttributeValue(offset, attributeValue));
+	}
 }
 
-class StringParser {
+export class StringParser {
 	private _offset = 0;
 
 	constructor(private _data: string) {
 
 	}
 
-	navigateToFirstNonEmptyChar(): string | undefined {
+	navigateToFirstNonEmptyChar(): StringParser {
 		for (const char of this.nextString) {
 			if (Utils.charIsEmpty(char)) {
 				this._offset++;
 				continue;
 			}
-			return this.currentChar;
+			return this;
 		}
-		return this.currentChar;
+		return this;
+	}
+
+	navigateToLastNonEmptyChar(): StringParser {
+		const nextString = this.nextString.trimRight();
+		this._offset += nextString.length - 1;
+		return this;
 	}
 
 	next(length?: number): boolean {
@@ -282,6 +304,7 @@ class StringParser {
 			if (currentChar === undefined) {
 				return {
 					text: content,
+					offset: this._offset,
 					stopPattern: ''
 				};
 			}
@@ -291,6 +314,7 @@ class StringParser {
 					this._offset++;
 					return {
 						text: content.slice(0, this._offset - firstOffset - data.length),
+						offset: this._offset - data.length,
 						stopPattern: data
 					};
 				}
@@ -307,6 +331,7 @@ class StringParser {
 					this._offset++;
 					return {
 						text: content.slice(0, this._offset - firstOffset - endPattern.length),
+						offset: this._offset - endPattern.length,
 						stopPattern: endPattern
 					};
 				}
@@ -316,6 +341,7 @@ class StringParser {
 					this._offset++;
 					return {
 						text: content.slice(0, this._offset - firstOffset - validatorPositionResult.stopPattern.length),
+						offset: this._offset - validatorPositionResult.stopPattern.length,
 						stopPattern: validatorPositionResult.stopPattern
 					};
 				}
@@ -337,6 +363,10 @@ class StringParser {
 
 	get offset(): number {
 		return this._offset;
+	}
+
+	get hasText(): boolean {
+		return this._data.trim().length > 0;
 	}
 }
 
@@ -366,6 +396,7 @@ interface PositionValidatorResult {
 
 interface NavigationInfos {
 	text: string;
+	offset: number;
 	stopPattern: string;
 }
 
@@ -374,5 +405,5 @@ function isPositionValidator(data: any): data is PositionValidator {
 		typeof data.isValid === 'function';
 }
 
-const whiteSpaceCharacters = [' ', '\t', '\n'];
+const whiteSpaceCharacters = [' ', '\t', '\n', '\r'];
 const selfCloseToken = `/${tokens.tagCloseBracket}`;

@@ -1,10 +1,13 @@
-export class AmlParsingError extends Error {
+import { IParsingInfos } from "./types/aml-parsing-result";
+
+export class AmlParsingError extends IParsingInfos {
 	type: AmlParsingErrorType;
+	error: Error = new Error();
 
 	constructor(type: AmlParsingErrorType, offset: number) {
-		super();
+		super(offset, '');
 		this.type = type;
-		this.message = `Error of parsing at offset ${offset} : ${errorMessages[type]}`;
+		this.error.message = `Error of parsing at offset ${offset} : ${errorMessages[type]}`;
 	}
 }
 

@@ -2,7 +2,7 @@ import { XmlDiagnosticData, TextPosition, TextRange } from "../types";
 import * as sax from "sax";
 import { XmlDocumentRules } from "../types/document-rules";
 import { antiCapitalize } from "../utils/string-utils";
-import { XmlDepthPath, XmlNode } from '../utils/xml-parsing';
+import { XmlDepthPath, XmlNode } from '../utils/parsing/types/xml-node';
 
 export class XmlDiagnosticDataManager {
 

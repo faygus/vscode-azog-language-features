@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import documentRules from "../../language/language-specifications";
 import { CompletionString } from '../../types';
-import { computeCompletion } from './utils/compute';
-import { XmlEditionType } from '../../utils/parsing/types';
+// import { computeCompletion } from './utils/compute';
+import { XmlEditionType } from '../../utils/parsing/types/xml-edition';
 
 export default class XmlCompletionItemProvider implements vscode.CompletionItemProvider {
 
@@ -20,7 +20,7 @@ export default class XmlCompletionItemProvider implements vscode.CompletionItemP
 	): Promise<vscode.CompletionItem[] | vscode.CompletionList> {
 		const documentContent = textDocument.getText();
 		const offset = textDocument.offsetAt(position);
-		const completionInfos = await computeCompletion(documentContent, offset, documentRules);
+		/*const completionInfos = await computeCompletion(documentContent, offset, documentRules);
 		if (token.isCancellationRequested || completionInfos === undefined) {
 			return [];
 		}
@@ -31,7 +31,8 @@ export default class XmlCompletionItemProvider implements vscode.CompletionItemP
 				res.insertText = `${t.name}=`;
 			}
 			return res;
-		});
+		});*/
+		return [];
 	}
 }
 

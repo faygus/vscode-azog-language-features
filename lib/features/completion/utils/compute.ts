@@ -1,7 +1,6 @@
 import { CompletionString } from '../../../types';
 import { XmlDocumentRules, XmlAttributeWithEnumType } from '../../../types/document-rules';
-import { getScopeForPosition } from '../../../utils/parsing/parse-at-position';
-import { XmlAttributeNameEdition, XmlAttributeValueEdition, XmlTagEdition, XmlEditionType } from '../../../utils/parsing/types';
+import { XmlAttributeNameEdition, XmlAttributeValueEdition, XmlTagEdition, XmlEditionType } from '../../../utils/parsing/types/xml-edition';
 import { antiCapitalize, capitalize } from '../../../utils/string-utils';
 
 interface CompletionInfos {
@@ -9,9 +8,9 @@ interface CompletionInfos {
 	completionStrings: CompletionString[];
 }
 
-export async function computeCompletion(documentContent: string, offset: number,
+/*export async function computeCompletion(documentContent: string, offset: number,
 	documentRules: XmlDocumentRules): Promise<CompletionInfos | undefined> {
-	const xmlEdition = await getScopeForPosition(documentContent, offset);
+	const xmlEdition = await getScopeForPositio(documentContent, offset);
 	if (xmlEdition.edition === undefined) {
 		return undefined;
 	}
@@ -69,3 +68,4 @@ function getAttributeValueCompletion(documentRules: XmlDocumentRules,
 	}
 	return [];
 }
+*/
