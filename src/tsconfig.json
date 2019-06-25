@@ -5,17 +5,16 @@
 
 		"noImplicitAny": false,
 		"removeComments": true,
-		"noUnusedLocals": true,
-		"noImplicitThis": true,
+		"noUnusedLocals": false,
+		"noImplicitThis": false,
 		"inlineSourceMap": false,
 		"sourceMap": true,
 		"outDir": "../out",
 		"preserveConstEnums": true,
 		"strictNullChecks": true,
-		"noUnusedParameters": true
+		"noUnusedParameters": false
 	},
 	"exclude": [
-		"node_modules",
 		".vscode-test"
 	]
 }

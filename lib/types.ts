@@ -49,20 +49,6 @@ export class XmlSchemaPropertiesArray extends Array<XmlSchemaProperties> {
 	}
 }
 
-export class XmlDiagnosticData {
-	position: TextRange;
-
-	constructor(position: TextRange | TextPosition,
-		public message: string,
-		public severity: "error" | "warning" | "info" | "hint") {
-		if (position instanceof TextRange) {
-			this.position = position;
-		} else {
-			this.position = new TextRange(position, position);
-		}
-	}
-}
-
 export class XmlScope {
 	tagName: string | undefined;
 	context: "element" | "attribute" | "text" | undefined;
@@ -75,7 +61,7 @@ export class TextPosition {
 }
 
 export class TextRange {
-	constructor(public start: TextPosition, public end: TextPosition) {
+	constructor(public start: number, public end: number) {
 
 	}
 }

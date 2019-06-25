@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { XmlDiagnosticData } from '../../types';
 import { EditorEventListener } from '../../utils/document-listener';
+import { AmlDiagnosticData } from '../../diagnostic/diagnostic-data';
 
-export abstract class XmlLinterProvider extends EditorEventListener {
+export abstract class AmlLinterProvider extends EditorEventListener {
 
 	private documentListener: vscode.Disposable;
 	private diagnosticCollection: vscode.DiagnosticCollection;
@@ -39,15 +39,15 @@ export abstract class XmlLinterProvider extends EditorEventListener {
 		this.diagnosticCollection.delete(textDocument.uri);
 	}
 
-	private async triggerLint(textDocument: vscode.TextDocument): Promise<void> {
-		if (textDocument.languageId !== 'xml') { // TODO
+	private triggerLint(textDocument: vscode.TextDocument): void {
+		/*if (textDocument.languageId !== 'xml') { // TODO
 			return;
-		}
+		}*/
 		const diagnostics: Array<vscode.Diagnostic[]> = new Array<vscode.Diagnostic[]>();
 		try {
 			const text = textDocument.getText();
-			const diagnosticResults = await this.getDiagnostics(text);
-			diagnostics.push(this.getDiagnosticArray(diagnosticResults));
+			const diagnosticResults = this.getDiagnostics(text);
+			diagnostics.push(this.getDiagnosticArray(diagnosticResults, textDocument));
 
 			this.diagnosticCollection.set(textDocument.uri, diagnostics
 				.reduce((prev, next) => prev.filter(dp => next.find(dn => dn.range.start.compareTo(dp.range.start) === 0))));
@@ -57,10 +57,10 @@ export abstract class XmlLinterProvider extends EditorEventListener {
 		}
 	}
 
-	private getDiagnosticArray(data: XmlDiagnosticData[]): vscode.Diagnostic[] {
+	private getDiagnosticArray(data: AmlDiagnosticData[], textDocument: vscode.TextDocument): vscode.Diagnostic[] {
 		return data.map(r => {
-			const start = new vscode.Position(r.position.start.line, r.position.start.column);
-			const end = new vscode.Position(r.position.end.line, r.position.end.column);
+			const start = textDocument.positionAt(r.position.start);
+			const end = textDocument.positionAt(r.position.end);
 			const range = new vscode.Range(start, end);
 			let severity = (r.severity === "error") ? vscode.DiagnosticSeverity.Error :
 				(r.severity === "warning") ? vscode.DiagnosticSeverity.Warning :
@@ -70,5 +70,5 @@ export abstract class XmlLinterProvider extends EditorEventListener {
 		});
 	}
 
-	protected abstract getDiagnostics(text: string): Promise<XmlDiagnosticData[]>;
+	protected abstract getDiagnostics(text: string): AmlDiagnosticData[];
 }

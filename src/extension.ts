@@ -1,60 +1,9 @@
 import * as vscode from 'vscode';
-import AutoCompletionProvider from '../lib/auto-completion-provider';
-import XmlCompletionItemProvider from '../lib/features/completion/completion-item-provider';
-import { AzogLinter } from '../lib/features/linter/azog-linter';
-import { XmlInterpreter } from '../lib/interpreter/interpreter';
-import { XmlCompleteSettings } from '../lib/types';
-
-export declare let globalSettings: XmlCompleteSettings;
-
-export const languageId: string = 'xml';
+import { LanguageFeatures } from '../lib/activate-features';
 
 export function activate(context: vscode.ExtensionContext) {
-
-	vscode.workspace.onDidChangeConfiguration(loadConfiguration, undefined, context.subscriptions);
-	loadConfiguration();
-	let completionitemprovider = vscode.languages.registerCompletionItemProvider(
-		getDocumentSelector(),
-		new XmlCompletionItemProvider(),
-		'"', '<');
-
-	/*let formatprovider = vscode.languages.registerDocumentFormattingEditProvider(
-		getDocumentSelector(),
-		new XmlFormatProvider(context, schemaPropertiesArray));*/
-
-	/*let rangeformatprovider = vscode.languages.registerDocumentRangeFormattingEditProvider(
-		getDocumentSelector(),
-		new XmlRangeFormatProvider(context, schemaPropertiesArray));*/
-
-	let linterprovider = new AzogLinter();
-
-	let autocompletionprovider = new AutoCompletionProvider();
-	let xmlInterpreter = new XmlInterpreter();
-	// const hoverDisposable = vscode.languages.registerHoverProvider('xml', new BaseHoverProvider());
-
-	context.subscriptions.push(
-		completionitemprovider,
-		// formatprovider,
-		// rangeformatprovider,
-		linterprovider,
-		autocompletionprovider,
-		xmlInterpreter,
-		// hoverDisposable
-	);
-}
-
-function loadConfiguration(): void {
-	const section = vscode.workspace.getConfiguration('xmlComplete', null);
-	globalSettings = new XmlCompleteSettings();
-	globalSettings.formattingStyle = section.get('formattingStyle', "singleLineAttributes");
-}
-
-function getDocumentSelector(): vscode.DocumentSelector {
-	return {
-		// language: languageId,
-		scheme: 'file',
-		pattern: '**/views/*.xml'
-	};
+	vscode.window.showInformationMessage('extension activated !!');
+	context.subscriptions.push(LanguageFeatures.activate());
 }
 
 export function deactivate() { }

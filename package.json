@@ -12,7 +12,7 @@
     "Linters"
   ],
   "activationEvents": [
-    "onLanguage:xml"
+    "*"
   ],
   "main": "./out/src/extension.js",
   "contributes": {

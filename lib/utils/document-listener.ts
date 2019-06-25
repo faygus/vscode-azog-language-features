@@ -2,7 +2,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 import * as vscode from 'vscode';
 
-const delay = 500;
+const defaultDelay = 500;
 
 export class EditorEventListener implements vscode.Disposable {
 	private _listeners: vscode.Disposable[] = [];
@@ -19,7 +19,7 @@ export class EditorEventListener implements vscode.Disposable {
 	}
 
 	protected listen<T>(listenerRegister: ListenerRegister<T>,
-		handler: (data: T) => void): void {
+		handler: (data: T) => void, delay: number = defaultDelay): void {
 		const subject$ = new Subject<T>();
 		const listener = listenerRegister(arg => {
 			subject$.next(arg);

@@ -1,17 +1,17 @@
-import { XmlDiagnosticDataManager } from "../../diagnostic/get-diagnostic-data";
+import { AmlDiagnosticDataManager } from "../../diagnostic/get-diagnostic-data";
 import documentRules from "../../language/language-specifications";
-import { XmlDiagnosticData } from "../../types";
-import { XmlLinterProvider } from "./linterprovider";
+import { AmlLinterProvider } from "./linter-provider";
+import { AmlDiagnosticData } from "../../diagnostic/diagnostic-data";
 
-export class AzogLinter extends XmlLinterProvider {
-	private _diagnosticDataManager: XmlDiagnosticDataManager;
+export class AzogLinter extends AmlLinterProvider {
+	private _diagnosticDataManager: AmlDiagnosticDataManager;
 
 	constructor() {
 		super();
-		this._diagnosticDataManager = new XmlDiagnosticDataManager(documentRules);
+		this._diagnosticDataManager = new AmlDiagnosticDataManager(documentRules);
 	}
 
-	protected getDiagnostics(text: string): Promise<XmlDiagnosticData[]> {
+	protected getDiagnostics(text: string): AmlDiagnosticData[] {
 		return this._diagnosticDataManager.diagnostic(text);
 	}
 }

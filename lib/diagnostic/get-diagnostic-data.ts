@@ -1,166 +1,160 @@
-import { XmlDiagnosticData, TextPosition, TextRange } from "../types";
-import * as sax from "sax";
+import * as AmlParsing from "aml-parsing";
+import { TextRange } from "../types";
 import { XmlDocumentRules } from "../types/document-rules";
 import { antiCapitalize } from "../utils/string-utils";
-import { XmlDepthPath, XmlNode } from '../utils/parsing/types/xml-node';
+import { AmlDiagnosticData } from "./diagnostic-data";
 
-export class XmlDiagnosticDataManager {
+export class AmlDiagnosticDataManager {
 
 	constructor(private _documentRules: XmlDocumentRules) {
 
 	}
 
-	diagnostic(xmlContent: string): Promise<XmlDiagnosticData[]> {
-		const stringSearch = new StringSearch(xmlContent);
-		return new Promise<XmlDiagnosticData[]>(
-			(resolve) => {
-				const parser = sax.parser(true);
-				sax.parser
-				let res: XmlDiagnosticData[] = [];
-				const xmlDepthPath = new XmlDepthPath();
+	diagnostic(data: string): AmlDiagnosticData[] {
+		let res: AmlDiagnosticData[] = [];
+		const parsingResult = AmlParsing.parseAmlCode(data);
+		for (const diag of parsingResult.diagnostics) {
+			const diagnosticData = new AmlDiagnosticData(diag.offset, 'error man !', 'error'); // TODO
+			res.push(diagnosticData);
+		}
+		for (const token of parsingResult.tokens) {
+			const error = this.checkError(token);
+			if (error) res.push(error);
+		}
+		// TODO parsingResult.tree
 
-				parser.onerror = () => {
-					// if (res.find(e => e.line === parser.line) === undefined) {
-					const position = new TextPosition(parser.line, parser.column);
-					const data = new XmlDiagnosticData(position, parser.error.message,
-						"error");
+		/*parser.onerror = () => {
+			const position = new TextPosition(parser.line, parser.column);
+			const data = new AmlDiagnosticData(position, parser.error.message,
+				"error");
+			res.push(data);
+		};
+
+		// TODO foreach tag
+			const element = this._documentRules.getElement(antiCapitalize(tag));
+			if (!element) {
+					const data = new AmlDiagnosticData(textRange,
+						errorMessages.unknownTag(tag), "info");
 					res.push(data);
-					// }
-					parser.resume();
-				};
+			}
 
-				parser.onopentag = (tagData: sax.Tag) => {
-					xmlDepthPath.push(new XmlNode(tagData.name, tagData.attributes));
-					let nodeNameSplitted: Array<string> = tagData.name.split('.');
-					const rootName = nodeNameSplitted[0];
-					const element = this._documentRules.getElement(antiCapitalize(rootName));
-					if (!element) {
-						const textRange = stringSearch.searchFirstWord({
-							line: parser.line, column: parser.column
-						}, '<');
-						if (textRange) {
-							const data = new XmlDiagnosticData(textRange,
-								errorMessages.unknownTag(tagData.name), "info");
-							res.push(data);
-						}
-					} else if (nodeNameSplitted.length > 1) {
-						const attributeName = nodeNameSplitted.slice().reverse()[0];
-						const attribute = element.getAttribute(antiCapitalize(attributeName));
-						if (!attribute) {
-							const textRange = stringSearch.search(`.${attributeName}`,
-								{ line: parser.line, column: parser.column }, '<');
-							if (textRange) {
-								const xmlDiagnosticData = new XmlDiagnosticData(textRange,
-									errorMessages.unknownAttribute(attributeName, rootName), // TODO rootName
-									"info");
-								res.push(xmlDiagnosticData);
+				const attribute = element.getAttribute(antiCapitalize(attributeName));
+				if (!attribute) {
+						const AmlDiagnosticData = new AmlDiagnosticData(textRange,
+							errorMessages.unknownAttribute(attributeName, rootName), // TODO rootName
+							"info");
+						res.push(AmlDiagnosticData);
+				} else { // check sub attributes
+					const schemaTagAttributes = attribute.getAllSubAttributes();
+					Object.keys(tagData.attributes)
+						.forEach((subAttributeName: string) => {
+							if (schemaTagAttributes.findIndex(sta => sta.name === antiCapitalize(subAttributeName)) < 0) {
+									const AmlDiagnosticData = new AmlDiagnosticData(textRange,
+										errorMessages.unknownAttribute(subAttributeName, tag),
+										"info");
+									res.push(AmlDiagnosticData);
 							}
-						} else { // check sub attributes
-							const schemaTagAttributes = attribute.getAllSubAttributes();
-							Object.keys(tagData.attributes)
-								.forEach((subAttributeName: string) => {
-									if (schemaTagAttributes.findIndex(sta => sta.name === antiCapitalize(subAttributeName)) < 0) {
-										const textRange = stringSearch.search(`${subAttributeName}=`,
-											{ line: parser.line, column: parser.column }, '<');
-										if (textRange) {
-											const xmlDiagnosticData = new XmlDiagnosticData(textRange,
-												errorMessages.unknownAttribute(subAttributeName, tagData.name),
-												"info");
-											res.push(xmlDiagnosticData);
-										}
-									}
-									// TODO check type of attribute
-								});
+							// TODO check type of attribute
+						});
+				}
+			} else {
+				let schemaTagAttributes = this._documentRules.getAllAttributes(antiCapitalize(tag));
+				Object.keys(tagData.attributes)
+					.forEach((attributeName: string) => {
+						if (schemaTagAttributes.findIndex(sta => sta.name === antiCapitalize(attributeName)) < 0) {
+								const AmlDiagnosticData = new AmlDiagnosticData(textRange,
+									errorMessages.unknownAttribute(attributeName, tagData.name),
+									"info");
+								res.push(AmlDiagnosticData);
 						}
-					} else {
-						let schemaTagAttributes = this._documentRules.getAllAttributes(antiCapitalize(rootName));
-						Object.keys(tagData.attributes)
-							.forEach((attributeName: string) => {
-								if (schemaTagAttributes.findIndex(sta => sta.name === antiCapitalize(attributeName)) < 0) {
-									const textRange = stringSearch.search(`${attributeName}=`,
-										{ line: parser.line, column: parser.column }, '<');
-									if (textRange) {
-										const xmlDiagnosticData = new XmlDiagnosticData(textRange,
-											errorMessages.unknownAttribute(attributeName, tagData.name),
-											"info");
-										res.push(xmlDiagnosticData);
-									}
-								}
-								// TODO check type of attribute
-							});
-						// TODO check nested node (<Style> can not contain <Label> for example)
-					}
-				};
+						// TODO check type of attribute
+					});
+				// TODO check nested node (<Style> can not contain <Label> for example)
+			}
+		};
+	});*/
+		return res;
+	}
 
-				parser.onclosetag = () => {
-					xmlDepthPath.pop();
-				};
+	private checkError(tokenWithContext: AmlParsing.AmlTokenWithContextTypes): AmlDiagnosticData | null {
+		if (tokenWithContext.type === AmlParsing.AmlTokenType.TAG) {
+			return this.checkTag(tokenWithContext);
+		}
+		if (tokenWithContext.type === AmlParsing.AmlTokenType.ATTRIBUTE_NAME) {
+			return this.checkAttributeName(tokenWithContext);
+		}
+		if (tokenWithContext.type === AmlParsing.AmlTokenType.ATTRIBUTE_VALUE) {
+			return this.checkAttributeValue(tokenWithContext);
+		}
+		if (tokenWithContext.type === AmlParsing.AmlTokenType.JSON_KEY) {
+			return this.checkAttributeSubPropertyName(tokenWithContext);
+		}
+		if (tokenWithContext.type === AmlParsing.AmlTokenType.JSON_LITERAL_VALUE) {
+			return this.checkAttributeSubPropertyValue(tokenWithContext);
+		}
+		return null;
+	}
 
-				parser.onend = () => {
-					resolve(res);
-				};
+	private checkTag(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.TAG>): AmlDiagnosticData | null {
+		const token = tokenWithContext.token;
+		const tag = token.text;
+		const element = this._documentRules.getElement(antiCapitalize(tag));
+		if (element) return null;
+		const range = new TextRange(token.range.start, token.range.end);
+		const msg = errorMessages.unknownTag(tag);
+		const data = new AmlDiagnosticData(range, msg, "info");
+		return data;
+	}
 
-				parser.write(xmlContent).close();
-			});
+	private checkAttributeName(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.ATTRIBUTE_NAME>): AmlDiagnosticData | null {
+		const token = tokenWithContext.token;
+		const attributeName = token.text;
+		const tag = tokenWithContext.context.element.tag;
+		const element = this._documentRules.getElement(antiCapitalize(tag));
+		if (!element) return null;
+		const attributes = this._documentRules.getAllAttributes(antiCapitalize(tag));
+		if (attributes.find(a => a.name === attributeName)) return null;
+		const range = new TextRange(token.range.start, token.range.end);
+		const msg = errorMessages.unknownAttribute(attributeName, tag);
+		const data = new AmlDiagnosticData(range, msg, "info");
+		return data;
+	}
+
+	private checkAttributeValue(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.ATTRIBUTE_VALUE>): AmlDiagnosticData | null {
+		return null; // TODO
+	}
+
+	private checkAttributeSubPropertyName(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.JSON_KEY>): AmlDiagnosticData | null {
+		const token = tokenWithContext.token;
+		const mainAttributeName = tokenWithContext.context.attributeName;
+		const propName = token.text;
+		const tag = tokenWithContext.context.element.tag;
+		const element = this._documentRules.getElement(antiCapitalize(tag));
+		if (!element) return null;
+		const attributes = this._documentRules.getAllAttributes(antiCapitalize(tag));
+		const attribute = attributes.find(a => a.name === mainAttributeName);
+		if (!attribute) return null;
+		console.log('attribute', JSON.stringify(attribute));
+		const match = attribute.getAllSubAttributes().find(a => a.name === propName);
+		// TODO check subAttribute of subAttribute
+		if (match) return null;
+		const range = new TextRange(token.range.start, token.range.end);
+		const msg = errorMessages.unknownProperty(propName);
+		const data = new AmlDiagnosticData(range, msg, "info");
+		return data;
+	}
+
+	private checkAttributeSubPropertyValue(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.JSON_LITERAL_VALUE>): AmlDiagnosticData | null {
+		const token = tokenWithContext.token;
+		const attributeName = tokenWithContext.context.attributeName;
+		const attributeValue = token.text;
+		// TODO
+		return null;
 	}
 }
 
 const errorMessages = {
-	unknownTag: (tag: string) => `Unknown xml tag '${tag}'`,
-	unknownAttribute: (attr: string, tag: string) => `Unknown xml attribute '${attr}' for tag '${tag}'`
-}
-
-class StringSearch {
-	private _lines: string[];
-
-	constructor(text: string) {
-		this._lines = text.split('\n');
-	}
-
-	search(str: string, position: { line: number, column: number }, afterChar: string): TextRange | undefined {
-		const area = this._lines.slice(0, position.line + 1).reverse();
-		let lineIndex = position.line;
-		for (const line of area) {
-			const searchAfter = line.lastIndexOf(afterChar) + 1;
-			const res = line.substring(searchAfter).indexOf(str);
-			if (res >= 0) {
-				const column = res + searchAfter;
-				const result = new TextRange(
-					new TextPosition(lineIndex, column),
-					new TextPosition(lineIndex, column + str.length)
-				);
-				return result;
-			}
-			lineIndex--;
-		}
-		return new TextRange(
-			new TextPosition(position.line, position.column),
-			new TextPosition(position.line, position.column)
-		);
-	}
-
-	searchFirstWord(position: { line: number, column: number }, afterChar: string): TextRange | undefined {
-		const area = this._lines.slice(0, position.line + 1).reverse();
-		let lineIndex = position.line;
-		for (const line of area) {
-			const searchAfter = line.lastIndexOf(afterChar);
-			if (searchAfter >= 0) {
-				const values = line.substring(searchAfter + 1).split(' ')
-					.filter(e => e.trim().length > 0);
-				if (values.length > 0) {
-					const firstExpression = values[0];
-					const column = line.substring(searchAfter + 1).indexOf(firstExpression) + searchAfter + 1;
-					return new TextRange(
-						new TextPosition(lineIndex, column),
-						new TextPosition(lineIndex, column + firstExpression.length)
-					);
-				}
-			}
-			lineIndex--;
-		}
-		return new TextRange(
-			new TextPosition(position.line, position.column),
-			new TextPosition(position.line, position.column)
-		);
-	}
-}
+	unknownTag: (tag: string) => `Unknown AML tag '${tag}'`,
+	unknownAttribute: (attr: string, tag: string) => `Unknown AML attribute '${attr}' for tag '${tag}'`,
+	unknownProperty: (prop: string) => `Unknown property '${prop}'`
+};
