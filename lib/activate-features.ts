@@ -1,29 +1,31 @@
 import * as vscode from 'vscode';
-import AutoCompletionProvider from './auto-completion-provider';
-import XmlCompletionItemProvider from './features/completion/completion-item-provider';
-import { AzogLinter } from './features/linter/azog-linter';
 import { HighlightManager } from './features/highlight/highlight';
+import { AzogLinter } from './features/linter/azog-linter';
+import { ParsingManager } from './parsing-manager';
+import AmlCompletionItemProvider from './features/completion/completion-item-provider';
 
 export const languageId: string = 'xml';
 
 export class LanguageFeatures {
 	static activate(): vscode.Disposable {
-		/*const completionitemprovider = vscode.languages.registerCompletionItemProvider(
+		const completionitemprovider = vscode.languages.registerCompletionItemProvider(
 			getDocumentSelector(),
-			new XmlCompletionItemProvider(),
-			'"', '<');*/
+			new AmlCompletionItemProvider(),
+			'"', '<');
 
 		const linterprovider = new AzogLinter();
 
 		// const autocompletionprovider = new AutoCompletionProvider();
 
 		const highlightMananger = new HighlightManager();
+		const parsingManager = new ParsingManager();
 
 		return new vscode.Disposable(() => {
-			// completionitemprovider.dispose();
+			completionitemprovider.dispose();
 			linterprovider.dispose();
 			// autocompletionprovider.dispose();
 			highlightMananger.dispose();
+			parsingManager.dispose();
 		});
 	}
 }

@@ -1,12 +1,18 @@
 import * as AmlParsing from "aml-parsing";
-import * as vscode from 'vscode';
-import { EditorEventListener } from '../../utils/document-listener';
-import { getDecorationStyle } from './get-decoration-style';
-import { Scope } from './scope';
+import * as vscode from "vscode";
+import { EditorEventListener } from "../../utils/document-listener";
+import { getDecorationStyle } from "./get-decoration-style";
+import { Scope } from "./scope";
+import { convertRange } from "./utils";
+import { ExpressionHighlight } from "./expression/highlight";
+import { ObjectHighlight } from "./object/highlight";
+import { IDecorator, BaseDecorator } from "./i-decorator";
+import { DecorationsList } from "./decoration-list";
 
 export class HighlightManager extends EditorEventListener {
 
 	private _openedEditors: vscode.TextEditor[] = [];
+	private _decorationsList = new DecorationsList();
 
 	constructor() {
 		super();
@@ -31,31 +37,47 @@ export class HighlightManager extends EditorEventListener {
 	}
 
 	private async triggerHighlight(editor: vscode.TextEditor) {
+		this._decorationsList.reset();
 		const text = editor.document.getText();
-		const parsingResult = AmlParsing.parseAmlCode(text);
+		const parsingResult = AmlParsing.parseAmlCode(text); // TODO do not parse again
 		const decorations: { [key: number]: vscode.DecorationOptions[] } = {
 			[Scope.TAG]: [],
 			[Scope.ATTRIBUTE_NAME]: [],
 			[Scope.ATTRIBUTE_VALUE]: []
 		};
-		for (const tokenWithContext of parsingResult.tokens) {
-			const token = tokenWithContext.token;
+		for (const token of parsingResult.tokens) {
+			const tokenUnit = token.tokenUnit;
 			const info: vscode.DecorationOptions = {
-				range: convertRange(token.range, editor.document)
+				range: convertRange(tokenUnit.range, editor.document)
 			};
-			const scope = getScope(token.type);
-			if (scope !== undefined) decorations[scope].push(info);
+			if (token instanceof AmlParsing.Model.Aml.TagToken) {
+				decorations[Scope.TAG].push(info);
+			} else if (token instanceof AmlParsing.Model.Aml.AtributeNameToken) {
+				decorations[Scope.ATTRIBUTE_NAME].push(info);
+			} else if (token instanceof AmlParsing.Model.Aml.AttributeValueToken) {
+				if (!token.content) {
+					decorations[Scope.ATTRIBUTE_VALUE].push(info);
+				}
+				const decorator = new BaseDecorator(this._decorationsList, token.tokenUnit.offset, editor);
+				if (token.content instanceof AmlParsing.Model.Expression.ExpressionTokensList) {
+					const highlighManager = new ExpressionHighlight(decorator);
+					highlighManager.highlight(token.content);
+				} else if (token.content instanceof AmlParsing.Model.Json.ObjectTokensList) {
+					const highlighManager = new ObjectHighlight(decorator);
+					highlighManager.highlight(token.content);
+				}
+			}
 		}
 		for (const scopeStr in decorations) {
 			const scope = Number(scopeStr);
 			const decorationStyle = getDecorationStyle(scope);
-			editor.setDecorations(decorationStyle, decorations[scope]);
+			this._decorationsList.addDecoration(decorationStyle, decorations[scope]);
+		}
+		// Apply all decorations
+		for (const data of this._decorationsList.list) {
+			editor.setDecorations(data.decorationType, data.decorations);
 		}
 	}
-}
-
-function getScope(type: AmlParsing.AmlTokenType): Scope {
-	return tokenTypeToScope[type];
 }
 
 const tokenTypeToScope = {
@@ -87,10 +109,3 @@ const largeNumberDecorationType = vscode.window.createTextEditorDecorationType({
 	cursor: 'crosshair',
 	color: 'green',
 });*/
-
-function convertRange(range: AmlParsing.Range, document: vscode.TextDocument): vscode.Range {
-	const start = document.positionAt(range.start);
-	const end = document.positionAt(range.end);
-	const res = new vscode.Range(start, end);
-	return res;
-}

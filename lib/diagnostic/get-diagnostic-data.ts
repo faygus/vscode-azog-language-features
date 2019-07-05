@@ -1,6 +1,6 @@
 import * as AmlParsing from "aml-parsing";
 import { TextRange } from "../types";
-import { XmlDocumentRules } from "../types/document-rules";
+import { XmlDocumentRules, XmlAttributeWithEnumType } from "../types/document-rules";
 import { antiCapitalize } from "../utils/string-utils";
 import { AmlDiagnosticData } from "./diagnostic-data";
 
@@ -76,65 +76,64 @@ export class AmlDiagnosticDataManager {
 		return res;
 	}
 
-	private checkError(tokenWithContext: AmlParsing.AmlTokenWithContextTypes): AmlDiagnosticData | null {
-		if (tokenWithContext.type === AmlParsing.AmlTokenType.TAG) {
-			return this.checkTag(tokenWithContext);
+	private checkError(token: AmlParsing.Model.Aml.Tokens): AmlDiagnosticData | null {
+		if (token instanceof AmlParsing.Model.Aml.TagToken) {
+			return this.checkTag(token);
 		}
-		if (tokenWithContext.type === AmlParsing.AmlTokenType.ATTRIBUTE_NAME) {
-			return this.checkAttributeName(tokenWithContext);
+		if (token instanceof AmlParsing.Model.Aml.AtributeNameToken) {
+			return this.checkAttributeName(token);
 		}
-		if (tokenWithContext.type === AmlParsing.AmlTokenType.ATTRIBUTE_VALUE) {
-			return this.checkAttributeValue(tokenWithContext);
+		if (token instanceof AmlParsing.Model.Aml.AttributeValueToken) {
+			return this.checkAttributeValue(token);
 		}
-		if (tokenWithContext.type === AmlParsing.AmlTokenType.JSON_KEY) {
-			return this.checkAttributeSubPropertyName(tokenWithContext);
+		/*if (token.type === AmlParsing.AmlTokenType.JSON_KEY) {
+			return this.checkAttributeSubPropertyName(token);
 		}
-		if (tokenWithContext.type === AmlParsing.AmlTokenType.JSON_LITERAL_VALUE) {
-			return this.checkAttributeSubPropertyValue(tokenWithContext);
-		}
+		if (token.type === AmlParsing.AmlTokenType.JSON_LITERAL_VALUE) {
+			return this.checkAttributeSubPropertyValue(token);
+		}*/
 		return null;
 	}
 
-	private checkTag(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.TAG>): AmlDiagnosticData | null {
-		const token = tokenWithContext.token;
-		const tag = token.text;
+	private checkTag(token: AmlParsing.Model.Aml.TagToken): AmlDiagnosticData | null {
+		const tokenUnit = token.tokenUnit;
+		const tag = tokenUnit.text;
 		const element = this._documentRules.getElement(antiCapitalize(tag));
 		if (element) return null;
-		const range = new TextRange(token.range.start, token.range.end);
+		const range = new TextRange(tokenUnit.range.start, tokenUnit.range.end);
 		const msg = errorMessages.unknownTag(tag);
 		const data = new AmlDiagnosticData(range, msg, "info");
 		return data;
 	}
 
-	private checkAttributeName(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.ATTRIBUTE_NAME>): AmlDiagnosticData | null {
-		const token = tokenWithContext.token;
-		const attributeName = token.text;
-		const tag = tokenWithContext.context.element.tag;
+	private checkAttributeName(token: AmlParsing.Model.Aml.AtributeNameToken): AmlDiagnosticData | null {
+		const tokenUnit = token.tokenUnit;
+		const attributeName = tokenUnit.text;
+		const tag = token.context.tag;
 		const element = this._documentRules.getElement(antiCapitalize(tag));
 		if (!element) return null;
 		const attributes = this._documentRules.getAllAttributes(antiCapitalize(tag));
 		if (attributes.find(a => a.name === attributeName)) return null;
-		const range = new TextRange(token.range.start, token.range.end);
+		const range = new TextRange(tokenUnit.range.start, tokenUnit.range.end);
 		const msg = errorMessages.unknownAttribute(attributeName, tag);
 		const data = new AmlDiagnosticData(range, msg, "info");
 		return data;
 	}
 
-	private checkAttributeValue(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.ATTRIBUTE_VALUE>): AmlDiagnosticData | null {
+	private checkAttributeValue(token: AmlParsing.Model.Aml.AttributeValueToken): AmlDiagnosticData | null {
 		return null; // TODO
 	}
 
-	private checkAttributeSubPropertyName(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.JSON_KEY>): AmlDiagnosticData | null {
+	/*private checkAttributeSubPropertyName(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.JSON_KEY>): AmlDiagnosticData | null {
 		const token = tokenWithContext.token;
 		const mainAttributeName = tokenWithContext.context.attributeName;
 		const propName = token.text;
 		const tag = tokenWithContext.context.element.tag;
 		const element = this._documentRules.getElement(antiCapitalize(tag));
 		if (!element) return null;
-		const attributes = this._documentRules.getAllAttributes(antiCapitalize(tag));
+		const attributes = element.attributes;
 		const attribute = attributes.find(a => a.name === mainAttributeName);
 		if (!attribute) return null;
-		console.log('attribute', JSON.stringify(attribute));
 		const match = attribute.getAllSubAttributes().find(a => a.name === propName);
 		// TODO check subAttribute of subAttribute
 		if (match) return null;
@@ -142,15 +141,32 @@ export class AmlDiagnosticDataManager {
 		const msg = errorMessages.unknownProperty(propName);
 		const data = new AmlDiagnosticData(range, msg, "info");
 		return data;
-	}
+	}*/
 
-	private checkAttributeSubPropertyValue(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.JSON_LITERAL_VALUE>): AmlDiagnosticData | null {
+	/*private checkAttributeSubPropertyValue(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.JSON_LITERAL_VALUE>): AmlDiagnosticData | null {
 		const token = tokenWithContext.token;
+		const tag = tokenWithContext.context.element.tag;
 		const attributeName = tokenWithContext.context.attributeName;
-		const attributeValue = token.text;
-		// TODO
+		const propValue = token.text;
+		const propName = tokenWithContext.context.jsonContext.key;
+		const element = this._documentRules.getElement(antiCapitalize(tag));
+		if (!element) return null;
+		const attribute = element.getAttribute(attributeName);
+		if (!attribute) return null;
+		const prop = attribute.getAllSubAttributes().find(a => a.name === propName); // TODO loop depth
+		if (!prop) return null;
+		if (XmlAttributeWithEnumType.typeIsEnum(prop)) {
+			const values = XmlAttributeWithEnumType.getEnum(prop);
+			const index = values.indexOf(propValue);
+			if (index < 0) {
+				const msg = `${propValue} is not assignable to ${propName}`;
+				const range = new TextRange(token.range.start, token.range.end);
+				const data = new AmlDiagnosticData(range, msg, "info");
+				return data;
+			}
+		}
 		return null;
-	}
+	}*/
 }
 
 const errorMessages = {

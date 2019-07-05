@@ -1,8 +1,8 @@
-import { IJsonData, IJsonAttribute } from "../types/json-data";
 import { antiCapitalize } from "../utils/string-utils";
 import { XmlDocumentRules, XmlAttributeWithEnumType } from "../types/document-rules";
+import * as AmlParsing from "aml-parsing";
 
-export function jsonToAzog(data: IJsonData, rules: XmlDocumentRules): any {
+export function jsonToAzog(data: AmlParsing.AmlInterpretation, rules: XmlDocumentRules): any {
 	const interpreter = new JsonInterpreter(rules);
 	return interpreter.interpret(data);
 }
@@ -12,14 +12,14 @@ class JsonInterpreter {
 
 	}
 
-	interpret(data: IJsonData): any {
+	interpret(data: AmlParsing.AmlInterpretation): any {
 		const viewType = JsonInterpreter.convertXmlTagToJsonKey(data.tag);
 		const attributes = {};
 		for (const attributeName in data.attributes) {
 			const attributeValue = data.attributes[attributeName];
 			attributes[attributeName] = this.processAttribute(viewType, attributeName, attributeValue);
 		}
-		const res: any = {
+		const res: any = { // TODO use type IViewAnyDeclarationJSON from azog lib
 			type: viewType,
 			value: {
 				...attributes
@@ -44,7 +44,7 @@ class JsonInterpreter {
 	 * size: 'Small' returns 0
 	 * size: 'Medium' returns 1
 	 */
-	private processAttribute(tag: string, name: string, value: IJsonAttribute) {
+	private processAttribute(tag: string, name: string, value: AmlParsing.PropertyValue) {
 		const element = this._rules.getElement(tag);
 		if (!element) {
 			throw new Error(`no element ${tag}`);
@@ -52,6 +52,15 @@ class JsonInterpreter {
 		const attribute = element.getAttribute(name);
 		if (!attribute) {
 			throw new Error(`no attribute ${name} for element ${tag}`);
+		}
+		// TODO expressionType
+		if (value instanceof AmlParsing.ExpressionInterpretation) {
+			return {
+				value: value.argument instanceof AmlParsing.Model.Expression.VariableIdentifier ? {
+					propertyName: value.argument.name
+				} : value.argument,
+				pipe: undefined // value.pipeIdentifier // TODO pipe should be number
+			};
 		}
 		if (XmlAttributeWithEnumType.typeIsEnum(attribute)) {
 			const values = XmlAttributeWithEnumType.getEnum(attribute);

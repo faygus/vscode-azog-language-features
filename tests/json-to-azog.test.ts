@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import { jsonToAzog } from "../lib/interpreter/json-to-azog";
-import { IJsonData } from "../lib/types/json-data";
 import { mockDocumentRules } from "./utils/fake-rules";
+import * as AmlParsing from "aml-parsing";
 
 describe('json to azog', () => {
 	it('should convert green to 1', async () => {
-		const json: IJsonData = {
+		const json: AmlParsing.AmlInterpretation = {
 			tag: 'Label',
 			attributes: {
 				color: 'green'
@@ -23,7 +23,7 @@ describe('json to azog', () => {
 	});
 
 	it('should convert red to 0', async () => {
-		const json: IJsonData = {
+		const json: AmlParsing.AmlInterpretation = {
 			tag: 'Label',
 			attributes: {
 				color: 'red'
@@ -41,7 +41,7 @@ describe('json to azog', () => {
 	});
 
 	it('should convert blue to 2', async () => {
-		const json: IJsonData = {
+		const json: AmlParsing.AmlInterpretation = {
 			tag: 'Label',
 			attributes: {
 				color: 'blue'
