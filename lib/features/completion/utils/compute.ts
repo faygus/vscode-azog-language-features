@@ -3,20 +3,19 @@ import { CompletionString } from "../../../types";
 import { XmlAttributeWithEnumType, XmlDocumentRules } from "../../../types/document-rules";
 import { XmlEditionType } from "../../../utils/parsing/types/xml-edition";
 import { antiCapitalize, capitalize } from "../../../utils/string-utils";
-
-interface CompletionInfos {
-	scope: XmlEditionType;
-	completionStrings: CompletionString[];
-}
+import { ICompletionInfos } from "./i-completion-infos";
+import { autoCompleteExpression } from "./expression";
+import { IDataProvider } from "../../../business/data-source/i-data-provider";
 
 export function computeCompletion(parsingResult: AmlParsing.ICodeParsingResult<
 	AmlParsing.Model.Aml.Tokens,
 	AmlParsing.AmlDiagnosticType,
 	AmlParsing.AmlInterpretation>,
 	offset: number,
-	documentRules: XmlDocumentRules): CompletionInfos | undefined {
+	documentRules: XmlDocumentRules,
+	dataProvider: IDataProvider): ICompletionInfos | undefined {
 
-	const autoComplete = new AutoComplete(documentRules);
+	const autoComplete = new AutoComplete(documentRules, offset, dataProvider);
 	const token = parsingResult.getTokenAt(offset);
 	console.log('token at', offset, JSON.stringify(token));
 	if (!token) return undefined;
@@ -42,29 +41,6 @@ export function computeCompletion(parsingResult: AmlParsing.ICodeParsingResult<
 }*/
 	console.warn('xml edition has no type');
 	return undefined;
-}
-
-function getAttributeValueCompletion(documentRules: XmlDocumentRules,
-	context: AmlParsing.Model.Aml.AttributeValueCxt): CompletionString[] {
-	const tag = context.tag;
-	const element = documentRules.getElement(antiCapitalize(tag));
-	if (!element) {
-		console.warn(`no element ${tag}`);
-		return [];
-	}
-
-	const attribute = element.attributes.find(a => a.name === context.attributeName);
-	if (!attribute) {
-		console.warn(`no attribute ${context.attributeName} in ${tag}`);
-		return [];
-	}
-	if (XmlAttributeWithEnumType.typeIsEnum(attribute)) {
-		return XmlAttributeWithEnumType.getEnum(attribute).map(value => {
-			return new CompletionString(value);
-		});
-	}
-	// TODO check if content is JSON or Expression
-	return [];
 }
 
 function getJsonKeyCompletion(documentRules: XmlDocumentRules, xmlEdition: AmlParsing.AmlJsonKeyCxt): CompletionString[] {
@@ -101,12 +77,15 @@ function getJsonValueCompletion(documentRules: XmlDocumentRules,
 }
 
 class AutoComplete {
-	constructor(private _documentRules: XmlDocumentRules) {
+	constructor(
+		private _documentRules: XmlDocumentRules,
+		private _offset: number,
+		private _dataProvider: IDataProvider) {
 
 	}
 
 	autoCompleteAttributeName(
-		token: AmlParsing.Model.Aml.AtributeNameToken): CompletionInfos | undefined {
+		token: AmlParsing.Model.Aml.AtributeNameToken): ICompletionInfos | undefined {
 		const element = this._documentRules.getElement(antiCapitalize(token.context.tag));
 		if (!element) {
 			return {
@@ -122,7 +101,7 @@ class AutoComplete {
 		};
 	}
 
-	autoCompleteTag(token: AmlParsing.Model.Aml.TagToken): CompletionInfos | undefined {
+	autoCompleteTag(token: AmlParsing.Model.Aml.TagToken): ICompletionInfos | undefined {
 		return {
 			scope: XmlEditionType.TAG,
 			completionStrings: this._documentRules.elements.map(element => {
@@ -132,18 +111,41 @@ class AutoComplete {
 		};
 	}
 
-	autoCompleteAttributeValue(token: AmlParsing.Model.Aml.AttributeValueToken): CompletionInfos | undefined {
+	autoCompleteAttributeValue(token: AmlParsing.Model.Aml.AttributeValueToken): ICompletionInfos | undefined {
 		if (!token.content) {
 			return {
 				scope: XmlEditionType.ATTRIBUTE_VALUE,
-				completionStrings: getAttributeValueCompletion(this._documentRules, token.context)
+				completionStrings: this.autoCompleteQuotedAttributeValue(token.context)
 			};
 		}
+		const relativeOffset = this._offset - token.tokenUnit.offset;
 		if (token.content instanceof AmlParsing.Model.Json.ObjectTokensList) {
 			// TODO
 		} else if (token.content instanceof AmlParsing.Model.Expression.ExpressionTokensList) {
 			// TODO
-			console.log('autocomplete expression', token.tokenUnit.text);
+			return autoCompleteExpression(token.content, relativeOffset, this._dataProvider);
+			// console.log('autocomplete expression', token.tokenUnit.text);
 		}
+	}
+
+	private autoCompleteQuotedAttributeValue(context: AmlParsing.Model.Aml.AttributeValueCxt): CompletionString[] {
+		const tag = context.tag;
+		const element = this._documentRules.getElement(antiCapitalize(tag));
+		if (!element) {
+			console.warn(`no element ${tag}`);
+			return [];
+		}
+
+		const attribute = element.attributes.find(a => a.name === context.attributeName);
+		if (!attribute) {
+			console.warn(`no attribute ${context.attributeName} in ${tag}`);
+			return [];
+		}
+		if (XmlAttributeWithEnumType.typeIsEnum(attribute)) {
+			return XmlAttributeWithEnumType.getEnum(attribute).map(value => {
+				return new CompletionString(value);
+			});
+		}
+		return [];
 	}
 }

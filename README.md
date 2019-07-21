@@ -1,4 +1,4 @@
-# Vscode Azog langiage features
+# Vscode Azog language features
 
-Depends on Aml-parsing library
+Depends on Aml-parsing and azog libraries
 Do a npm link to use it during development

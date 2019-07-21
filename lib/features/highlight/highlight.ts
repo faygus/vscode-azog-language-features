@@ -1,20 +1,21 @@
 import * as AmlParsing from "aml-parsing";
 import * as vscode from "vscode";
+import { IFileDefinition } from "../../file-definition";
 import { EditorEventListener } from "../../utils/document-listener";
+import { DecorationsList } from "./decoration-list";
+import { ExpressionHighlight } from "./expression/highlight";
 import { getDecorationStyle } from "./get-decoration-style";
+import { BaseDecorator } from "./i-decorator";
+import { ObjectHighlight } from "./object/highlight";
 import { Scope } from "./scope";
 import { convertRange } from "./utils";
-import { ExpressionHighlight } from "./expression/highlight";
-import { ObjectHighlight } from "./object/highlight";
-import { IDecorator, BaseDecorator } from "./i-decorator";
-import { DecorationsList } from "./decoration-list";
 
 export class HighlightManager extends EditorEventListener {
 
 	private _openedEditors: vscode.TextEditor[] = [];
 	private _decorationsList = new DecorationsList();
 
-	constructor() {
+	constructor(private _fileDefinition: IFileDefinition) {
 		super();
 		vscode.window.visibleTextEditors.forEach(editor => {
 			this._openedEditors.push(editor);
@@ -37,6 +38,9 @@ export class HighlightManager extends EditorEventListener {
 	}
 
 	private async triggerHighlight(editor: vscode.TextEditor) {
+		if (!this._fileDefinition.isView(editor.document.fileName)) {
+			return;
+		}
 		this._decorationsList.reset();
 		const text = editor.document.getText();
 		const parsingResult = AmlParsing.parseAmlCode(text); // TODO do not parse again

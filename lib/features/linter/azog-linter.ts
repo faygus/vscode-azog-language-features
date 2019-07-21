@@ -1,13 +1,14 @@
-import { AmlDiagnosticDataManager } from "../../diagnostic/get-diagnostic-data";
+import { AmlDiagnosticDataManager } from "../../business/diagnostic/get-diagnostic-data";
 import documentRules from "../../language/language-specifications";
 import { AmlLinterProvider } from "./linter-provider";
-import { AmlDiagnosticData } from "../../diagnostic/diagnostic-data";
+import { AmlDiagnosticData } from "../../business/diagnostic/diagnostic-data";
+import { IFileDefinition } from "../../file-definition";
 
 export class AzogLinter extends AmlLinterProvider {
 	private _diagnosticDataManager: AmlDiagnosticDataManager;
 
-	constructor() {
-		super();
+	constructor(fileDefinition: IFileDefinition) {
+		super(fileDefinition);
 		this._diagnosticDataManager = new AmlDiagnosticDataManager(documentRules);
 	}
 

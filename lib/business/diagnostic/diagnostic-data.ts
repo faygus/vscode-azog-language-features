@@ -1,4 +1,4 @@
-import { TextRange } from "../types";
+import { TextRange } from "../../types";
 
 export class AmlDiagnosticData {
 	position: TextRange;

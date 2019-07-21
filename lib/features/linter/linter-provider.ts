@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import { EditorEventListener } from '../../utils/document-listener';
-import { AmlDiagnosticData } from '../../diagnostic/diagnostic-data';
+import { AmlDiagnosticData } from '../../business/diagnostic/diagnostic-data';
+import { IFileDefinition } from '../../file-definition';
 
 export abstract class AmlLinterProvider extends EditorEventListener {
 
-	private documentListener: vscode.Disposable;
 	private diagnosticCollection: vscode.DiagnosticCollection;
 	protected _defaultDelay = 500; // ms
 
-	constructor() {
+	constructor(private _fileDefinition: IFileDefinition) {
 		super();
 		this.diagnosticCollection = vscode.languages.createDiagnosticCollection();
 		this.listen(vscode.workspace.onDidChangeTextDocument, (event) => {
@@ -31,7 +31,6 @@ export abstract class AmlLinterProvider extends EditorEventListener {
 	}
 
 	public dispose() {
-		this.documentListener.dispose();
 		this.diagnosticCollection.clear();
 	}
 
@@ -40,9 +39,9 @@ export abstract class AmlLinterProvider extends EditorEventListener {
 	}
 
 	private triggerLint(textDocument: vscode.TextDocument): void {
-		/*if (textDocument.languageId !== 'xml') { // TODO
+		if (!this._fileDefinition.isView(textDocument.fileName)) {
 			return;
-		}*/
+		}
 		const diagnostics: Array<vscode.Diagnostic[]> = new Array<vscode.Diagnostic[]>();
 		try {
 			const text = textDocument.getText();

@@ -1,7 +1,7 @@
 import * as AmlParsing from "aml-parsing";
-import { TextRange } from "../types";
-import { XmlDocumentRules, XmlAttributeWithEnumType } from "../types/document-rules";
-import { antiCapitalize } from "../utils/string-utils";
+import { TextRange } from "../../types";
+import { XmlDocumentRules, XmlAttributeWithEnumType } from "../../types/document-rules";
+import { antiCapitalize } from "../../utils/string-utils";
 import { AmlDiagnosticData } from "./diagnostic-data";
 
 export class AmlDiagnosticDataManager {
