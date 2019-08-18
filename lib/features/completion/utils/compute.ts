@@ -7,15 +7,12 @@ import { ICompletionInfos } from "./i-completion-infos";
 import { autoCompleteExpression } from "./expression";
 import { IDataProvider } from "../../../business/data-source/i-data-provider";
 
-export function computeCompletion(parsingResult: AmlParsing.ICodeParsingResult<
-	AmlParsing.Model.Aml.Tokens,
-	AmlParsing.AmlDiagnosticType,
-	AmlParsing.AmlInterpretation>,
+export function computeCompletion(parsingResult: AmlParsing.ParsingResult,
 	offset: number,
 	documentRules: XmlDocumentRules,
 	dataProvider: IDataProvider): ICompletionInfos | undefined {
 
-	const autoComplete = new AutoComplete(documentRules, offset, dataProvider);
+	/*const autoComplete = new AutoComplete(documentRules, offset, dataProvider);
 	const token = parsingResult.getTokenAt(offset);
 	console.log('token at', offset, JSON.stringify(token));
 	if (!token) return undefined;
@@ -27,7 +24,8 @@ export function computeCompletion(parsingResult: AmlParsing.ICodeParsingResult<
 	}
 	if (token instanceof AmlParsing.Model.Aml.AttributeValueToken) {
 		return autoComplete.autoCompleteAttributeValue(token);
-	}
+	}*/ // TODO
+
 	/*case AmlParsing.AmlTokenType.JSON_KEY:
 		return {
 			scope: XmlEditionType.JSON_KEY,
@@ -43,7 +41,7 @@ export function computeCompletion(parsingResult: AmlParsing.ICodeParsingResult<
 	return undefined;
 }
 
-function getJsonKeyCompletion(documentRules: XmlDocumentRules, xmlEdition: AmlParsing.AmlJsonKeyCxt): CompletionString[] {
+/*function getJsonKeyCompletion(documentRules: XmlDocumentRules, xmlEdition: AmlParsing.AmlJsonKeyCxt): CompletionString[] {
 	const tag = xmlEdition.element.tag;
 	const element = documentRules.getElement(antiCapitalize(tag));
 	if (!element) return [];
@@ -74,9 +72,9 @@ function getJsonValueCompletion(documentRules: XmlDocumentRules,
 		});
 	}
 	return [];
-}
+}*/
 
-class AutoComplete {
+/*class AutoComplete {
 	constructor(
 		private _documentRules: XmlDocumentRules,
 		private _offset: number,
@@ -149,3 +147,4 @@ class AutoComplete {
 		return [];
 	}
 }
+*/

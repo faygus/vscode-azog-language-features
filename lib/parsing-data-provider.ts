@@ -18,6 +18,6 @@ export class ParsingDataProvider {
 }
 
 export type AmlParsingData = {
-	parsingResult: AmlParsing.AmlParsingResult;
+	parsingResult: AmlParsing.ParsingResult;
 	azogConversion: {} | undefined;
 };

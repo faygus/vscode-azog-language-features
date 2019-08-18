@@ -5,10 +5,10 @@ import { XmlEditionType } from "../../../utils/parsing/types/xml-edition";
 import { IDataProvider } from "../../../business/data-source/i-data-provider";
 
 export function autoCompleteExpression(
-	groupOfTokens: AmlParsing.Model.Expression.ExpressionTokensList,
+	groupOfTokens: AmlParsing.Expression.Token,
 	relativeOffset: number,
 	dataProvider: IDataProvider): ICompletionInfos | undefined {
-	const token = groupOfTokens.getTokenAt(relativeOffset);
+	/*const token = groupOfTokens.getTokenAt(relativeOffset);
 	console.log('autoCompleteExpression', relativeOffset);
 	if (!token) {
 		return undefined;
@@ -19,7 +19,8 @@ export function autoCompleteExpression(
 	}
 	if (token instanceof AmlParsing.Model.Expression.PipeToken) {
 		return autoCompletePipe(text, dataProvider);
-	}
+	}*/
+	return undefined; // TODO
 }
 
 function autoCompleteVariable(name: string,

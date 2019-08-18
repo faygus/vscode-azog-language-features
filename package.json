@@ -49,7 +49,8 @@
     "release": "standard-version",
 		"build": "tsc -p ./lib/tsconfig.json",
 		"manual-test": "ts-node --project ./tests/manual/tsconfig.json ./tests/manual/index.ts",
-		"test-partial": "TS_NODE_PROJECT='./tests/tsconfig.json' mocha --require ts-node/register tests/partial/*test.ts"
+		"test-partial": "TS_NODE_PROJECT='./tests/tsconfig.json' mocha --require ts-node/register tests/partial/*test.ts",
+		"link": "npm link aml-parsing && npm link code-parsing"
   },
   "dependencies": {
     "get-uri": "2.0.3",

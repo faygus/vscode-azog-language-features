@@ -2,7 +2,7 @@ import { antiCapitalize } from "../utils/string-utils";
 import { XmlDocumentRules, XmlAttributeWithEnumType } from "../types/document-rules";
 import * as AmlParsing from "aml-parsing";
 
-export function jsonToAzog(data: AmlParsing.AmlInterpretation, rules: XmlDocumentRules): any {
+export function jsonToAzog(data: AmlParsing.ViewFile.Interpretation, rules: XmlDocumentRules): any {
 	const interpreter = new JsonInterpreter(rules);
 	return interpreter.interpret(data);
 }
@@ -12,11 +12,12 @@ class JsonInterpreter {
 
 	}
 
-	interpret(data: AmlParsing.AmlInterpretation): any {
-		const viewType = JsonInterpreter.convertXmlTagToJsonKey(data.tag);
+	interpret(data: AmlParsing.ViewFile.Interpretation): any {
+		const viewType = JsonInterpreter.convertXmlTagToJsonKey(data.template.root.tag);
 		const attributes = {};
-		for (const attributeName in data.attributes) {
-			const attributeValue = data.attributes[attributeName];
+		for (const attribute of data.template.root.attributes) {
+			const attributeName = attribute.name;
+			const attributeValue = attribute.value;
 			attributes[attributeName] = this.processAttribute(viewType, attributeName, attributeValue);
 		}
 		const res: any = { // TODO use type IViewAnyDeclarationJSON from azog lib
@@ -25,7 +26,7 @@ class JsonInterpreter {
 				...attributes
 			}
 		};
-		for (const child of data.children) {
+		/*for (const child of data.children) {
 			const tagSplitted = child.tag.split('.');
 			if (tagSplitted.length > 0 && tagSplitted[0] === data.tag) {
 				const attributeName = JsonInterpreter.convertXmlTagToJsonKey(tagSplitted.slice(1).join('.'));
@@ -35,7 +36,7 @@ class JsonInterpreter {
 			} else {
 				// dataToAzog(child); // TODO
 			}
-		}
+		}*/ // TODO
 		return res;
 	}
 
@@ -44,7 +45,7 @@ class JsonInterpreter {
 	 * size: 'Small' returns 0
 	 * size: 'Medium' returns 1
 	 */
-	private processAttribute(tag: string, name: string, value: AmlParsing.PropertyValue) {
+	private processAttribute(tag: string, name: string, value: string | AmlParsing.Json.IKeyValue | AmlParsing.Expression.Interpretation) {
 		const element = this._rules.getElement(tag);
 		if (!element) {
 			throw new Error(`no element ${tag}`);
@@ -54,9 +55,9 @@ class JsonInterpreter {
 			throw new Error(`no attribute ${name} for element ${tag}`);
 		}
 		// TODO expressionType
-		if (value instanceof AmlParsing.ExpressionInterpretation) {
+		if (value instanceof AmlParsing.Expression.Interpretation) {
 			return {
-				value: value.argument instanceof AmlParsing.Model.Expression.VariableIdentifier ? {
+				value: value.argument instanceof AmlParsing.Expression.VariableIdentifier ? {
 					propertyName: value.argument.name
 				} : value.argument,
 				pipe: undefined // value.pipeIdentifier // TODO pipe should be number

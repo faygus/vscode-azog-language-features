@@ -36,7 +36,7 @@ export class ParsingManager extends EditorEventListener {
 
 	private async triggerOperation(editor: vscode.TextEditor) {
 		const text = editor.document.getText();
-		const parsingResult = AmlParsing.parseAmlCode(text);
+		const parsingResult = AmlParsing.parse(text);
 		const json = parsingResult.interpretation;
 		// console.log('json', json);
 		let parsingData: AmlParsingData = {

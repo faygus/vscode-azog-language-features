@@ -3,12 +3,8 @@ import * as vscode from "vscode";
 import { IFileDefinition } from "../../file-definition";
 import { EditorEventListener } from "../../utils/document-listener";
 import { DecorationsList } from "./decoration-list";
-import { ExpressionHighlight } from "./expression/highlight";
-import { getDecorationStyle } from "./get-decoration-style";
 import { BaseDecorator } from "./i-decorator";
-import { ObjectHighlight } from "./object/highlight";
-import { Scope } from "./scope";
-import { convertRange } from "./utils";
+import { ViewFileHighlight } from "./view-file/highlight";
 
 export class HighlightManager extends EditorEventListener {
 
@@ -35,6 +31,7 @@ export class HighlightManager extends EditorEventListener {
 			}
 			this._openedEditors = editors;
 		}, 0);
+		// TODO listen events from parser manager and not from vscode
 	}
 
 	private async triggerHighlight(editor: vscode.TextEditor) {
@@ -43,54 +40,16 @@ export class HighlightManager extends EditorEventListener {
 		}
 		this._decorationsList.reset();
 		const text = editor.document.getText();
-		const parsingResult = AmlParsing.parseAmlCode(text); // TODO do not parse again
-		const decorations: { [key: number]: vscode.DecorationOptions[] } = {
-			[Scope.TAG]: [],
-			[Scope.ATTRIBUTE_NAME]: [],
-			[Scope.ATTRIBUTE_VALUE]: []
-		};
-		for (const token of parsingResult.tokens) {
-			const tokenUnit = token.tokenUnit;
-			const info: vscode.DecorationOptions = {
-				range: convertRange(tokenUnit.range, editor.document)
-			};
-			if (token instanceof AmlParsing.Model.Aml.TagToken) {
-				decorations[Scope.TAG].push(info);
-			} else if (token instanceof AmlParsing.Model.Aml.AtributeNameToken) {
-				decorations[Scope.ATTRIBUTE_NAME].push(info);
-			} else if (token instanceof AmlParsing.Model.Aml.AttributeValueToken) {
-				if (!token.content) {
-					decorations[Scope.ATTRIBUTE_VALUE].push(info);
-				}
-				const decorator = new BaseDecorator(this._decorationsList, token.tokenUnit.offset, editor);
-				if (token.content instanceof AmlParsing.Model.Expression.ExpressionTokensList) {
-					const highlighManager = new ExpressionHighlight(decorator);
-					highlighManager.highlight(token.content);
-				} else if (token.content instanceof AmlParsing.Model.Json.ObjectTokensList) {
-					const highlighManager = new ObjectHighlight(decorator);
-					highlighManager.highlight(token.content);
-				}
-			}
-		}
-		for (const scopeStr in decorations) {
-			const scope = Number(scopeStr);
-			const decorationStyle = getDecorationStyle(scope);
-			this._decorationsList.addDecoration(decorationStyle, decorations[scope]);
-		}
+		const parsingResult = AmlParsing.parse(text); // TODO do not parse again
+		const decorator = new BaseDecorator(this._decorationsList, editor);
+		const highlighter = new ViewFileHighlight(decorator);
+		highlighter.highlight(parsingResult.token);
 		// Apply all decorations
 		for (const data of this._decorationsList.list) {
 			editor.setDecorations(data.decorationType, data.decorations);
 		}
 	}
 }
-
-const tokenTypeToScope = {
-	[AmlParsing.AmlTokenType.TAG]: Scope.TAG,
-	[AmlParsing.AmlTokenType.ATTRIBUTE_NAME]: Scope.ATTRIBUTE_NAME,
-	[AmlParsing.AmlTokenType.ATTRIBUTE_VALUE]: Scope.ATTRIBUTE_VALUE,
-	[AmlParsing.AmlTokenType.JSON_KEY]: Scope.ATTRIBUTE_NAME,
-	[AmlParsing.AmlTokenType.JSON_LITERAL_VALUE]: Scope.ATTRIBUTE_VALUE,
-};
 
 // create a decorator type that we use to decorate small numbers
 /*const smallNumberDecorationType = vscode.window.createTextEditorDecorationType({

@@ -12,15 +12,15 @@ export class AmlDiagnosticDataManager {
 
 	diagnostic(data: string): AmlDiagnosticData[] {
 		let res: AmlDiagnosticData[] = [];
-		const parsingResult = AmlParsing.parseAmlCode(data);
+		const parsingResult = AmlParsing.parse(data);
 		for (const diag of parsingResult.diagnostics) {
 			const diagnosticData = new AmlDiagnosticData(diag.offset, 'error man !', 'error'); // TODO
 			res.push(diagnosticData);
 		}
-		for (const token of parsingResult.tokens) {
+		/*for (const token of parsingResult.token.content.viewTemplate.content.root.content.attributes) {
 			const error = this.checkError(token);
 			if (error) res.push(error);
-		}
+		}*/
 		// TODO parsingResult.tree
 
 		/*parser.onerror = () => {
@@ -76,26 +76,7 @@ export class AmlDiagnosticDataManager {
 		return res;
 	}
 
-	private checkError(token: AmlParsing.Model.Aml.Tokens): AmlDiagnosticData | null {
-		if (token instanceof AmlParsing.Model.Aml.TagToken) {
-			return this.checkTag(token);
-		}
-		if (token instanceof AmlParsing.Model.Aml.AtributeNameToken) {
-			return this.checkAttributeName(token);
-		}
-		if (token instanceof AmlParsing.Model.Aml.AttributeValueToken) {
-			return this.checkAttributeValue(token);
-		}
-		/*if (token.type === AmlParsing.AmlTokenType.JSON_KEY) {
-			return this.checkAttributeSubPropertyName(token);
-		}
-		if (token.type === AmlParsing.AmlTokenType.JSON_LITERAL_VALUE) {
-			return this.checkAttributeSubPropertyValue(token);
-		}*/
-		return null;
-	}
-
-	private checkTag(token: AmlParsing.Model.Aml.TagToken): AmlDiagnosticData | null {
+	private checkTag(token: AmlParsing.TagWithAttributes.TagToken): AmlDiagnosticData | null {
 		const tokenUnit = token.tokenUnit;
 		const tag = tokenUnit.text;
 		const element = this._documentRules.getElement(antiCapitalize(tag));
@@ -106,8 +87,8 @@ export class AmlDiagnosticDataManager {
 		return data;
 	}
 
-	private checkAttributeName(token: AmlParsing.Model.Aml.AtributeNameToken): AmlDiagnosticData | null {
-		const tokenUnit = token.tokenUnit;
+	private checkAttributeName(token: AmlParsing.Attributes.AttributeNameToken): AmlDiagnosticData | null {
+		/*const tokenUnit = token.tokenUnit;
 		const attributeName = tokenUnit.text;
 		const tag = token.context.tag;
 		const element = this._documentRules.getElement(antiCapitalize(tag));
@@ -117,12 +98,13 @@ export class AmlDiagnosticDataManager {
 		const range = new TextRange(tokenUnit.range.start, tokenUnit.range.end);
 		const msg = errorMessages.unknownAttribute(attributeName, tag);
 		const data = new AmlDiagnosticData(range, msg, "info");
-		return data;
+		return data;*/
+		return null;
 	}
 
-	private checkAttributeValue(token: AmlParsing.Model.Aml.AttributeValueToken): AmlDiagnosticData | null {
+	/*private checkAttributeValue(token: AmlParsing.Model.Aml.AttributeValueToken): AmlDiagnosticData | null {
 		return null; // TODO
-	}
+	}*/
 
 	/*private checkAttributeSubPropertyName(tokenWithContext: AmlParsing.AmlTokenWithContext<AmlParsing.AmlTokenType.JSON_KEY>): AmlDiagnosticData | null {
 		const token = tokenWithContext.token;

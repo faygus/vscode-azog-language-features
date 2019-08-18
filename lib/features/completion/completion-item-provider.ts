@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import documentRules from "../../language/language-specifications";
 import { CompletionString } from '../../types';
 import { computeCompletion } from './utils/compute';
-import { XmlEditionType } from '../../utils/parsing/types/xml-edition';
 import { ParsingDataProvider } from '../../parsing-data-provider';
 import { IDataProviders } from '../../business/data-source/i-data-providers';
 
@@ -55,9 +54,9 @@ export default class AmlCompletionItemProvider implements vscode.CompletionItemP
 		return completionInfos.completionStrings.map(t => {
 			const res = convertCompletionItem(t, ''); // TODO add a detail string (element, attribute, text)
 			// TODO res.insertText = '="';
-			if (completionInfos.scope === XmlEditionType.ATTRIBUTE_NAME) {
+			/*if (completionInfos.scope === XmlEditionType.ATTRIBUTE_NAME) {
 				res.insertText = `${t.name}=`;
-			}
+			}*/ // TODO
 			return res;
 		});
 
