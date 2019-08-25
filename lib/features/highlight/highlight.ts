@@ -45,6 +45,9 @@ export class HighlightManager extends EditorEventListener {
 		const highlighter = new ViewFileHighlight(decorator);
 		highlighter.highlight(parsingResult.token);
 		// Apply all decorations
+		if (!this._decorationsList.hasElements) {
+			return;
+		}
 		for (const data of this._decorationsList.list) {
 			editor.setDecorations(data.decorationType, data.decorations);
 		}

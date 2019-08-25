@@ -16,9 +16,32 @@ class Converter {
 	}
 
 	interpret(data: AmlParsing.Template.Interpretation): AzogInterface.IViewJSON {
-		const viewType = antiCapitalize(data.root.tag);
+		const value = data.data;
+		if (value instanceof AmlParsing.Template.IfStatement.Interpretation) {
+			const child = this.convertTagWithAttributes(value.statement);
+			const ifCondition: AzogInterface.IConditionalViewJSON = {
+				condition: {
+					value: {
+						propertyName: value.variableIdentifier
+					}
+				},
+				template: {
+					componentId: 2, // TODO
+				}
+			};
+			const res: AzogInterface.IViewJSON = {
+				type: 'if',
+				value: ifCondition
+			}
+			return res;
+		}
+		return this.convertTagWithAttributes(value.root); // TODO
+	}
+
+	private convertTagWithAttributes(data: AmlParsing.TagWithAttributes.Interpretation): AzogInterface.IViewJSON {
+		const viewType = antiCapitalize(data.tag);
 		const attributes = {};
-		for (const attribute of data.root.attributes) {
+		for (const attribute of data.attributes) {
 			const attributeName = attribute.name;
 			const attributeValue = attribute.value;
 			attributes[attributeName] = this.processAttribute(viewType, attributeName, attributeValue);

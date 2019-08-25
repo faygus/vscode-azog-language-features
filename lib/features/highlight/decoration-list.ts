@@ -25,6 +25,17 @@ export class DecorationsList {
 	get list(): DecorationDetail[] {
 		return Array.from(this._decorations.values());
 	}
+
+	hasElements(): boolean {
+		const list = this.list;
+		if (!list.length) return false;
+		for (const element of list) {
+			if (element.decorations.length) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
 
 interface DecorationDetail {

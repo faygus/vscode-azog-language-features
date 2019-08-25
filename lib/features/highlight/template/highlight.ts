@@ -8,9 +8,16 @@ export class TemplateHighlight extends BaseHighlight<AmlParsing.Template.Token> 
 
 	protected _highlight(data: AmlParsing.Template.Token): void {
 		const highlighter = new TagWithAttributeHighlight(this._decorator);
-		highlighter.highlight(data.content.root);
-		for (const embededView of data.content.embededViews) {
-			highlighter.highlight(embededView);
+		if (data.content.body instanceof AmlParsing.Template.CustomView.Token) {
+			highlighter.highlight(data.content.body.content.root);
+			for (const view of data.content.body.content.embededViews) {
+				highlighter.highlight(view);
+			}
+		} else {
+			if (data.content.body.content.blockStatement) {
+				highlighter.highlight(data.content.body.content.blockStatement);
+			}
+			// TODO highlight test statement
 		}
 	}
 }

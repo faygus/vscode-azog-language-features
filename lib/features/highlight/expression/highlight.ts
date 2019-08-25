@@ -16,7 +16,7 @@ export class ExpressionHighlight extends BaseHighlight<AmlParsing.Expression.Tok
 	}
 
 	private highlightArgument(argument: AmlParsing.Expression.LiteralArgumentToken |
-		AmlParsing.Expression.VariableArgumentToken): void {
+		AmlParsing.CommonTokens.VariableIdentifierToken): void {
 		if (argument instanceof AmlParsing.Expression.LiteralArgumentToken) {
 			this.highlightToken(argument, Scope.LITERAL_ARGUMENT);
 		} else {

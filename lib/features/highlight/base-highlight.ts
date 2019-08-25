@@ -15,6 +15,9 @@ export abstract class BaseHighlight<T> {
 
 	highlight(data: T): void {
 		this._decorations = {};
+		if (!data) {
+			return;
+		}
 		this._highlight(data);
 		for (const scopeStr in this._decorations) {
 			const scope = Number(scopeStr);
