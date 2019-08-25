@@ -40,7 +40,7 @@ export default class AmlCompletionItemProvider implements vscode.CompletionItemP
 			return new vscode.CompletionList(undefined);
 		}
 		const dataProvider = this._dataProviders.getDataProvider(textDocument.fileName);
-		const completionInfos = computeCompletion(parsingResults.parsingResult,
+		const completionInfos = computeCompletion(parsingResults,
 			offset,
 			documentRules,
 			dataProvider

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import XmlSimpleParser from './helpers/xmlsimpleparser';
-import { EditorEventListener } from './utils/document-listener';
+import XmlSimpleParser from '../helpers/xmlsimpleparser';
+import { EditorEventListener } from './document-listener';
 
 const languageId: string = 'xml';
 

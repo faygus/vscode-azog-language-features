@@ -2,13 +2,13 @@ import * as AmlParsing from "aml-parsing";
 import * as vscode from 'vscode';
 
 export class ParsingResults {
-	private _map: Map<string, AmlParsingData> = new Map();
+	private _map: Map<string, AmlParsing.ParsingResult> = new Map();
 
-	set(document: vscode.TextDocument, parsingResult: AmlParsingData): void {
+	set(document: vscode.TextDocument, parsingResult: AmlParsing.ParsingResult): void {
 		this._map.set(document.fileName, parsingResult);
 	}
 
-	get(document: vscode.TextDocument): AmlParsingData | undefined {
+	get(document: vscode.TextDocument): AmlParsing.ParsingResult | undefined {
 		return this._map.get(document.fileName);
 	}
 }
@@ -16,8 +16,3 @@ export class ParsingResults {
 export class ParsingDataProvider {
 	static parsingResults = new ParsingResults();
 }
-
-export type AmlParsingData = {
-	parsingResult: AmlParsing.ParsingResult;
-	azogConversion: {} | undefined;
-};

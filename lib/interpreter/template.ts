@@ -1,31 +1,35 @@
+import * as AmlParsing from "aml-parsing";
+import * as AzogInterface from "azog-interface";
 import { antiCapitalize } from "../utils/string-utils";
 import { XmlDocumentRules, XmlAttributeWithEnumType } from "../types/document-rules";
-import * as AmlParsing from "aml-parsing";
 
-export function jsonToAzog(data: AmlParsing.ViewFile.Interpretation, rules: XmlDocumentRules): any {
-	const interpreter = new JsonInterpreter(rules);
+export function convert(
+	data: AmlParsing.Template.Interpretation,
+	rules: XmlDocumentRules): AzogInterface.IViewJSON {
+	const interpreter = new Converter(rules);
 	return interpreter.interpret(data);
 }
 
-class JsonInterpreter {
+class Converter {
 	constructor(private _rules: XmlDocumentRules) {
 
 	}
 
-	interpret(data: AmlParsing.ViewFile.Interpretation): any {
-		const viewType = JsonInterpreter.convertXmlTagToJsonKey(data.template.root.tag);
+	interpret(data: AmlParsing.Template.Interpretation): AzogInterface.IViewJSON {
+		const viewType = antiCapitalize(data.root.tag);
 		const attributes = {};
-		for (const attribute of data.template.root.attributes) {
+		for (const attribute of data.root.attributes) {
 			const attributeName = attribute.name;
 			const attributeValue = attribute.value;
 			attributes[attributeName] = this.processAttribute(viewType, attributeName, attributeValue);
 		}
-		const res: any = { // TODO use type IViewAnyDeclarationJSON from azog lib
-			type: viewType,
-			value: {
+		const res: AzogInterface.IViewJSON = {
+			type: <any>viewType,
+			value: <any>{
 				...attributes
 			}
 		};
+		return res;
 		/*for (const child of data.children) {
 			const tagSplitted = child.tag.split('.');
 			if (tagSplitted.length > 0 && tagSplitted[0] === data.tag) {
@@ -37,7 +41,12 @@ class JsonInterpreter {
 				// dataToAzog(child); // TODO
 			}
 		}*/ // TODO
-		return res;
+	}
+
+	private convertViewModel(props: AmlParsing.DataInterface.Property[]): void {
+		props.map(prop => {
+			prop.type
+		});
 	}
 
 	/**

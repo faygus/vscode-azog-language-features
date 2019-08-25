@@ -1,4 +1,3 @@
-export { jsonToAzog } from "./interpreter/json-to-azog";
+export { InterpretationProvider } from "./interpreter/intepretation-provider";
 export { LanguageFeatures } from "./activate-features";
-export { ParsingDataProvider } from "./parsing-data-provider";
 export * from "./business";
