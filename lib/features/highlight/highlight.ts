@@ -11,7 +11,7 @@ export class HighlightManager extends EditorEventListener {
 	private _openedEditors: vscode.TextEditor[] = [];
 	private _decorationsList = new DecorationsList();
 
-	constructor(private _fileDefinition: IFileDefinition) {
+	constructor(private _fileDefinition: (path: string) => boolean) {
 		super();
 		vscode.window.visibleTextEditors.forEach(editor => {
 			this._openedEditors.push(editor);
@@ -35,7 +35,7 @@ export class HighlightManager extends EditorEventListener {
 	}
 
 	private async triggerHighlight(editor: vscode.TextEditor) {
-		if (!this._fileDefinition.isView(editor.document.fileName)) {
+		if (!this._fileDefinition(editor.document.fileName)) {
 			return;
 		}
 		this._decorationsList.reset();

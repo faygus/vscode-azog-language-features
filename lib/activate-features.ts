@@ -1,35 +1,40 @@
 import * as vscode from 'vscode';
 import { HighlightManager } from './features/highlight/highlight';
 import { AzogLinter } from './features/linter/azog-linter';
-import { ParsingManager } from './parsing-manager';
-import AmlCompletionItemProvider from './features/completion/completion-item-provider';
-import { MockDataProviders } from './business/data-source/mock/data-providers';
-import { IDataProviders } from './business/data-source/i-data-providers';
 import { IFileDefinition } from './file-definition';
+import { FileList } from './file-list';
+import { ParsingManager } from './parsing-manager';
+import { IProvider } from './provider';
+import { GlobalRegistry } from './code-registry/registry';
 
 export const languageId: string = 'xml';
 
 export class LanguageFeatures {
-	static activate(dataProviders: IDataProviders,
-		fileDefinition: IFileDefinition): vscode.Disposable {
-		const completionitemprovider = vscode.languages.registerCompletionItemProvider(
+	static activate(provider: IProvider): vscode.Disposable {
+		provider.registerParser(new ParsingManager());
+		GlobalRegistry.registry = provider.fileRegistry;
+
+		/*const completionitemprovider = vscode.languages.registerCompletionItemProvider(
 			getDocumentSelector(),
 			new AmlCompletionItemProvider(dataProviders),
-			...completionTriggerCharacters);
+			...completionTriggerCharacters);*/
 
-		const linterprovider = new AzogLinter(fileDefinition);
+		const linterprovider = new AzogLinter(provider.getFileViewSelector);
 
 		// const autocompletionprovider = new AutoCompletionProvider();
 
-		const highlightMananger = new HighlightManager(fileDefinition);
-		const parsingManager = new ParsingManager();
-
+		const highlightMananger = new HighlightManager(provider.getFileViewSelector);
+		const fileList = new FileList();
+		const disposables = [
+			// completionitemprovider,
+			linterprovider,
+			highlightMananger,
+			fileList
+		];
 		return new vscode.Disposable(() => {
-			completionitemprovider.dispose();
-			linterprovider.dispose();
-			// autocompletionprovider.dispose();
-			highlightMananger.dispose();
-			parsingManager.dispose();
+			for (const disposable of disposables) {
+				disposable.dispose();
+			}
 		});
 	}
 }

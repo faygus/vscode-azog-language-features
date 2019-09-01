@@ -1,2 +1,2 @@
-export { convert as convertTemplate } from "./template";
-export { convert as convertViewModelInterface } from "./view-model-interface";
+export * from "./template";
+export * from "./view-model-interface";

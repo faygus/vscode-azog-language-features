@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import documentRules from "../../language/language-specifications";
 import { CompletionString } from '../../types';
 import { computeCompletion } from './utils/compute';
-import { ParsingDataProvider } from '../../parsing-data-provider';
 import { IDataProviders } from '../../business/data-source/i-data-providers';
 
 export default class AmlCompletionItemProvider implements vscode.CompletionItemProvider {
@@ -32,7 +31,7 @@ export default class AmlCompletionItemProvider implements vscode.CompletionItemP
 		position: vscode.Position,
 		token: vscode.CancellationToken,
 		_context: vscode.CompletionContext): vscode.CompletionItem[] | vscode.CompletionList {
-		const offset = textDocument.offsetAt(position);
+		/*const offset = textDocument.offsetAt(position);
 		// console.log('provideCompletionItems', offset);
 		const parsingResults = ParsingDataProvider.parsingResults.get(textDocument);
 		if (!parsingResults) {
@@ -54,9 +53,9 @@ export default class AmlCompletionItemProvider implements vscode.CompletionItemP
 		return completionInfos.completionStrings.map(t => {
 			const res = convertCompletionItem(t, ''); // TODO add a detail string (element, attribute, text)
 			// TODO res.insertText = '="';
-			/*if (completionInfos.scope === XmlEditionType.ATTRIBUTE_NAME) {
-				res.insertText = `${t.name}=`;
-			}*/ // TODO
+			//if (completionInfos.scope === XmlEditionType.ATTRIBUTE_NAME) {
+				// res.insertText = `${t.name}=`;
+			// } // TODO
 			return res;
 		});
 
@@ -67,7 +66,8 @@ export default class AmlCompletionItemProvider implements vscode.CompletionItemP
 			completionItem.detail = detail,
 				completionItem.documentation = data.comment;
 			return completionItem;
-		}
+		}*/
+		return []; // TODO
 	}
 }
 

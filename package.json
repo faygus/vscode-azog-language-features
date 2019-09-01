@@ -47,12 +47,13 @@
     "test": "TS_NODE_PROJECT='./tests/tsconfig.json' mocha --require ts-node/register tests/*test.ts",
     "package": "vsce package",
     "release": "standard-version",
-		"build": "tsc -p ./lib/tsconfig.json",
-		"manual-test": "ts-node --project ./tests/manual/tsconfig.json ./tests/manual/index.ts",
-		"test-partial": "TS_NODE_PROJECT='./tests/tsconfig.json' mocha --require ts-node/register tests/partial/*test.ts",
-		"link": "npm link aml-parsing && npm link code-parsing && npm link azog-interface"
+    "build": "tsc -p ./lib/tsconfig.json",
+    "manual-test": "ts-node --project ./tests/manual/tsconfig.json ./tests/manual/index.ts",
+    "test-partial": "TS_NODE_PROJECT='./tests/tsconfig.json' mocha --require ts-node/register tests/partial/*test.ts",
+    "link": "npm link aml-parsing && npm link code-parsing && npm link azog-interface && npm link azog && npm link workspace-listener"
   },
   "dependencies": {
+    "file-system": "^2.2.2",
     "get-uri": "2.0.3",
     "rxjs": "^6.5.2",
     "sax": "1.2.4"

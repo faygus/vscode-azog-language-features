@@ -2,23 +2,29 @@ import * as AmlParsing from "aml-parsing";
 import * as AzogInterface from "azog-interface";
 import { antiCapitalize } from "../utils/string-utils";
 import { XmlDocumentRules, XmlAttributeWithEnumType } from "../types/document-rules";
+import { ViewCodeRegistry } from "../code-registry/view";
 
-export function convert(
-	data: AmlParsing.Template.Interpretation,
-	rules: XmlDocumentRules): AzogInterface.IViewJSON {
-	const interpreter = new Converter(rules);
-	return interpreter.interpret(data);
+interface IInterpretation {
+	template: AzogInterface.IViewJSON,
+	dependencies: {
+		views: number[],
+		// TODO pipe
+	}
 }
 
-class Converter {
-	constructor(private _rules: XmlDocumentRules) {
+export class TemplateInterpreter {
+	constructor(private _registry: ViewCodeRegistry, private _rules: XmlDocumentRules) {
 
 	}
 
-	interpret(data: AmlParsing.Template.Interpretation): AzogInterface.IViewJSON {
+	convert(data: AmlParsing.Template.Interpretation): IInterpretation {
 		const value = data.data;
 		if (value instanceof AmlParsing.Template.IfStatement.Interpretation) {
-			const child = this.convertTagWithAttributes(value.statement);
+			// const child = this.convertTagWithAttributes(value.statement);
+			const childInfos = this._registry.getByName(value.statement.tag);
+			if (!childInfos) {
+				throw new Error(`${value.statement.tag} unknown`);
+			}
 			const ifCondition: AzogInterface.IConditionalViewJSON = {
 				condition: {
 					value: {
@@ -26,19 +32,24 @@ class Converter {
 					}
 				},
 				template: {
-					componentId: 2, // TODO
+					componentId: childInfos.id,
 				}
 			};
 			const res: AzogInterface.IViewJSON = {
 				type: 'if',
 				value: ifCondition
 			}
-			return res;
+			return {
+				template: res,
+				dependencies: {
+					views: [childInfos.id]
+				}
+			};
 		}
 		return this.convertTagWithAttributes(value.root); // TODO
 	}
 
-	private convertTagWithAttributes(data: AmlParsing.TagWithAttributes.Interpretation): AzogInterface.IViewJSON {
+	private convertTagWithAttributes(data: AmlParsing.TagWithAttributes.Interpretation): IInterpretation {
 		const viewType = antiCapitalize(data.tag);
 		const attributes = {};
 		for (const attribute of data.attributes) {
@@ -52,7 +63,12 @@ class Converter {
 				...attributes
 			}
 		};
-		return res;
+		return {
+			template: res,
+			dependencies: {
+				views: [] // TODO
+			}
+		};
 		/*for (const child of data.children) {
 			const tagSplitted = child.tag.split('.');
 			if (tagSplitted.length > 0 && tagSplitted[0] === data.tag) {

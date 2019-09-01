@@ -1,3 +1,5 @@
-export { InterpretationProvider } from "./interpreter/intepretation-provider";
-export { LanguageFeatures } from "./activate-features";
+export * from "./activate-features";
 export * from "./business";
+export { StaticInterpreter } from "./interpreter/interpreter";
+export { ParsingInfos } from "./parsing-manager";
+export { IProvider } from "./provider";

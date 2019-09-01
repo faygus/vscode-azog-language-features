@@ -8,7 +8,7 @@ export abstract class AmlLinterProvider extends EditorEventListener {
 	private diagnosticCollection: vscode.DiagnosticCollection;
 	protected _defaultDelay = 500; // ms
 
-	constructor(private _fileDefinition: IFileDefinition) {
+	constructor(private _fileDefinition: (path: string) => boolean) {
 		super();
 		this.diagnosticCollection = vscode.languages.createDiagnosticCollection();
 		this.listen(vscode.workspace.onDidChangeTextDocument, (event) => {
@@ -39,7 +39,7 @@ export abstract class AmlLinterProvider extends EditorEventListener {
 	}
 
 	private triggerLint(textDocument: vscode.TextDocument): void {
-		if (!this._fileDefinition.isView(textDocument.fileName)) {
+		if (!this._fileDefinition(textDocument.fileName)) {
 			return;
 		}
 		const diagnostics: Array<vscode.Diagnostic[]> = new Array<vscode.Diagnostic[]>();

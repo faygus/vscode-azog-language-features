@@ -7,7 +7,7 @@ import { IFileDefinition } from "../../file-definition";
 export class AzogLinter extends AmlLinterProvider {
 	private _diagnosticDataManager: AmlDiagnosticDataManager;
 
-	constructor(fileDefinition: IFileDefinition) {
+	constructor(fileDefinition: (path: string) => boolean) {
 		super(fileDefinition);
 		this._diagnosticDataManager = new AmlDiagnosticDataManager(documentRules);
 	}
